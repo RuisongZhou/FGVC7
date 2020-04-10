@@ -14,8 +14,8 @@ from torch.utils.data import DataLoader
 
 import config
 from models import WSDAN
-from datasets import get_trainval_datasets
-from utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment
+from dataset.dataset import FGVC7Data
+from utils.utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment, get_transform
 
 # GPU settings
 assert torch.cuda.is_available()
@@ -54,13 +54,17 @@ def main():
     ##################################
     # Load dataset
     ##################################
-    train_dataset, validate_dataset = get_trainval_datasets(config.tag, config.image_size)
-
-    train_loader, validate_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True,
-                                               num_workers=config.workers, pin_memory=True), \
-                                    DataLoader(validate_dataset, batch_size=config.batch_size * 4, shuffle=False,
+    train_dataset = FGVC7Data(root='./data/plant-pathology-2020-fgvc7', phase='train', transform=get_transform(config.image_size, 'train'))
+    val_dataset = FGVC7Data(root='./data/plant-pathology-2020-fgvc7', phase='valid', transform=get_transform(config.image_size, 'test'))
+    test_dataset = FGVC7Data(root='./data/plant-pathology-2020-fgvc7', phase='test', transform=get_transform(config.image_size, 'test'))
+    train_loader  = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True,
                                                num_workers=config.workers, pin_memory=True)
-    num_classes = train_dataset.num_classes
+    validate_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=True,
+                              num_workers=config.workers, pin_memory=True)
+    test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=True,
+                              num_workers=config.workers, pin_memory=True)
+
+    num_classes = 4
 
     ##################################
     # Initialize model

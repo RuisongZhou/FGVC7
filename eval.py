@@ -59,9 +59,10 @@ def main():
     # Dataset for testing
     ##################################
     test_dataset = FGVC7Data(root='./data/', phase='test', transform=get_transform(config.image_size, 'test'))
-    test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False,
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
                              num_workers=2, pin_memory=True)
-
+    import pandas as pd
+    sample_submission = pd.read_csv('./data/sample_submission.csv')
     ##################################
     # Initialize model
     ##################################
@@ -91,10 +92,12 @@ def main():
     ref_accuracy.reset()
 
     net.eval()
+    result = []
     with torch.no_grad():
         pbar = tqdm(total=len(test_loader), unit=' batches')
         pbar.set_description('Validation')
         for i,X in enumerate(test_loader):
+
             X = X.to(device)
 
             # WS-DAN
@@ -127,20 +130,30 @@ def main():
                     raimg.save(os.path.join(savepath, '%03d_raw_atten.jpg' % (i * config.batch_size + batch_idx)))
                     haimg.save(os.path.join(savepath, '%03d_heat_atten.jpg' % (i * config.batch_size + batch_idx)))
 
-            # Top K
-            #epoch_raw_acc = raw_accuracy(y_pred_raw, y)
-            #epoch_ref_acc = ref_accuracy(y_pred, y)
-
             # end of this batch
-            batch_info = 'Val step {}'.format((i+1)*config.batch_size)
+            batch_info = 'Val step {}'.format((i+1))
             pbar.update()
             pbar.set_postfix_str(batch_info)
 
             # 处理结果
-            y_pred = F.softmax(y_pred,dim=1).numpy()
-
+            y_pred = F.softmax(y_pred,dim=1).cpu().numpy()
+            result.append(y_pred)
         pbar.close()
 
 
+    healthy = []
+    multiple_disease = []
+    rust = []
+    scab = []
+    for i in tqdm(range(len(result))):
+        healthy.append(result[i][0][0])
+        multiple_disease.append(result[i][0][1])
+        rust.append(result[i][0][2])
+        scab.append(result[i][0][3])
+    sample_submission['healthy'] = healthy
+    sample_submission['multiple_diseases'] = multiple_disease
+    sample_submission['rust'] = rust
+    sample_submission['scab'] = scab
+    sample_submission.to_csv('submission.csv', index=False)
 if __name__ == '__main__':
     main()

@@ -238,8 +238,8 @@ def train(**kwargs):
             epoch_drop_acc = drop_metric(y_pred_drop, y)
 
         # end of this batch
-        batch_info = 'Loss {:.4f}, Raw Acc {:.2f}, Crop Acc {:.2f}, Drop Acc{:.2f}'.format(
-            epoch_loss, epoch_raw_acc[0],
+        batch_info = 'Loss {:.4f}, LR {:.6f} Raw Acc {:.2f}, Crop Acc {:.2f}, Drop Acc{:.2f}'.format(
+            epoch_loss,  optimizer.param_groups[0]['lr'], epoch_raw_acc[0],
             epoch_crop_acc[0],  epoch_drop_acc[0])
         pbar.update()
         pbar.set_postfix_str(batch_info)

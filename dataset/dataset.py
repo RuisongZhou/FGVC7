@@ -9,7 +9,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
-
+import itertools
+import random
 class FGVC7Data(Dataset):
     def __init__(self, root, transform=None, phase='train'):
         self.root = root
@@ -21,10 +22,23 @@ class FGVC7Data(Dataset):
         df = pd.read_csv(os.path.join(self.root, '{}.csv'.format(self.phase)))
         labels = []
         if self.phase == 'train':
+            ids = [[],[],[],[]]
             for i in range(len(df)):
-                labels.append(np.argmax(df.iloc[i].values[1:]))
-        ids = df['image_id']
-        ids = [os.path.join(self.root, 'images', e+'.jpg')for e in ids]
+                label = np.argmax(df.iloc[i].values[1:])
+                labels.append(label)
+                ids[label].append(os.path.join(self.root, 'images', df.iloc[i].values[0]+'.jpg'))
+            ids[1] = ids[1] * 6
+            labels = [[i]*len(ids[i]) for i in range(4)]
+            labels = list(itertools.chain.from_iterable(labels))
+            ids = list(itertools.chain.from_iterable(ids))
+            randnum = random.randint(0, 100)
+            random.seed(randnum)
+            random.shuffle(ids)
+            random.seed(randnum)
+            random.shuffle(labels)
+        else:
+            ids = df['image_id']
+            ids = [os.path.join(self.root, 'images', e+'.jpg')for e in ids]
         return ids, labels
 
     def __len__(self):
@@ -36,7 +50,7 @@ class FGVC7Data(Dataset):
         if self.transform != None:
             image = self.transform(image)
         if self.phase == 'test':
-            return id
+            return image
         else:
             label = self.labels[item]
             return image, label
@@ -44,4 +58,4 @@ class FGVC7Data(Dataset):
 
 if __name__ == '__main__':
     dataset = FGVC7Data('./data/plant-pathology-2020-fgvc7', phase='test')
-    print(dataset)
+    print(dataset[0])

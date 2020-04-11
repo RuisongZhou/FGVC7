@@ -114,6 +114,7 @@ def main():
     # Use cuda
     ##################################
     net.to(device)
+    net.cuda()
     if torch.cuda.device_count() > 1:
         net = nn.DataParallel(net)
 

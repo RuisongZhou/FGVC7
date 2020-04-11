@@ -36,9 +36,9 @@ center_loss = CenterLoss()
 
 # loss and metric
 loss_container = AverageMeter(name='loss')
-raw_metric = TopKAccuracyMetric(topk=(1, 2))
-crop_metric = TopKAccuracyMetric(topk=(1,2 ))
-drop_metric = TopKAccuracyMetric(topk=(1,2 ))
+raw_metric =  TopKAccuracyMetric(topk=(1,2))
+crop_metric = TopKAccuracyMetric(topk=(1,2))
+drop_metric = TopKAccuracyMetric(topk=(1,2))
 
 #others
 config.batch_size = args.bs
@@ -247,12 +247,12 @@ def train(**kwargs):
             epoch_drop_acc = drop_metric(y_pred_drop, y)
 
         # end of this batch
-        batch_info = 'Loss {:.4f}, LR {:.6f} Raw Acc {:.2f}, Crop Acc {:.2f}, Drop Acc{:.2f}'.format(
+        batch_info = 'Raw Acc {:.2f}, Crop Acc {:.2f}, Drop Acc{:.2f} Loss {:.4f}, LR {:.6f}'.format(
             epoch_loss,  optimizer.param_groups[0]['lr'], epoch_raw_acc[0],
             epoch_crop_acc[0],  epoch_drop_acc[0])
-        #pbar.update()
-        #pbar.set_postfix_str(batch_info)
-        logging.info(batch_info)
+        pbar.update()
+        pbar.set_postfix_str(batch_info)
+        #logging.info(batch_info)
 
     # end of this epoch
     logs['train_{}'.format(loss_container.name)] = epoch_loss
@@ -315,7 +315,7 @@ def validate(**kwargs):
     end_time = time.time()
 
     batch_info = 'Val Loss {:.4f}, Val Acc ({:.2f}, {:.2f})'.format(epoch_loss, epoch_acc[0], epoch_acc[1])
-    #pbar.set_postfix_str('{}, {}'.format(logs['train_info'], batch_info))
+    pbar.set_postfix_str('{}, {}'.format(logs['train_info'], batch_info))
 
     # write log for this epoch
     logging.info('Valid: {}, Time {:3.2f}'.format(batch_info, end_time - start_time))

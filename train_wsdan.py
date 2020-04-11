@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Time    : 2020/4/11 5:11 下午
-# @Author  : RuisongZhou
-# @Mail    : rhyszhou99@gmail.com
-
+"""TRAINING
+Created: May 04,2019 - Yuchong Gu
+Revised: Dec 03,2019 - Yuchong Gu
+"""
 import os
 import time
 import logging
@@ -15,7 +13,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 import config
-from models import efficientnet
+from models import WSDAN
 from dataset.dataset import FGVC7Data
 from utils.utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment, get_transform
 
@@ -31,7 +29,10 @@ center_loss = CenterLoss()
 
 # loss and metric
 loss_container = AverageMeter(name='loss')
-raw_metric = TopKAccuracyMetric(topk=(1,2))
+raw_metric = TopKAccuracyMetric(topk=(1, 2))
+crop_metric = TopKAccuracyMetric(topk=(1,2 ))
+drop_metric = TopKAccuracyMetric(topk=(1,2 ))
+
 
 def main():
     ##################################
@@ -60,6 +61,7 @@ def main():
     validate_loader = DataLoader(validate_dataset, batch_size=config.batch_size, shuffle=True,
                               num_workers=config.workers, pin_memory=True)
 
+
     num_classes = 4
     print('Train Size: {}'.format(len(train_dataset)))
     print('Valid Size: {}'.format(len(validate_dataset)))
@@ -68,7 +70,10 @@ def main():
     ##################################
     logs = {}
     start_epoch = 0
-    net = efficientnet(num_classes=num_classes,size='b0')
+    net = WSDAN(num_classes=num_classes, M=config.num_attentions, net=config.net, pretrained=True)
+
+    # feature_center: size of (#classes, #attention_maps * #channel_features)
+    feature_center = torch.zeros(num_classes, config.num_attentions * net.num_features).to(device)
 
     if config.ckpt:
         # Load ckpt and get state_dict
@@ -82,6 +87,11 @@ def main():
         state_dict = checkpoint['state_dict']
         net.load_state_dict(state_dict)
         logging.info('Network loaded from {}'.format(config.ckpt))
+
+        # load feature center
+        if 'feature_center' in checkpoint:
+            feature_center = checkpoint['feature_center'].to(device)
+            logging.info('feature_center loaded from {}'.format(config.ckpt))
 
     logging.info('Network weights save to {}'.format(config.save_dir))
 
@@ -113,9 +123,9 @@ def main():
     else:
         callback.reset()
 
-        ##################################
-        # TRAINING
-        ##################################
+    ##################################
+    # TRAINING
+    ##################################
     logging.info('Start training: Total epochs: {}, Batch size: {}, Training size: {}, Validation size: {}'.
                  format(config.epochs, config.batch_size, len(train_dataset), len(validate_dataset)))
     logging.info('')
@@ -134,6 +144,7 @@ def main():
         train(logs=logs,
               data_loader=train_loader,
               net=net,
+              feature_center=feature_center,
               optimizer=optimizer,
               pbar=pbar)
         validate(logs=logs,
@@ -146,20 +157,24 @@ def main():
         else:
             scheduler.step()
 
-        callback.on_epoch_end(logs, net)
+        callback.on_epoch_end(logs, net, feature_center=feature_center)
         pbar.close()
+
 
 def train(**kwargs):
     # Retrieve training configuration
     logs = kwargs['logs']
     data_loader = kwargs['data_loader']
     net = kwargs['net']
+    feature_center = kwargs['feature_center']
     optimizer = kwargs['optimizer']
     pbar = kwargs['pbar']
 
     # metrics initialization
     loss_container.reset()
     raw_metric.reset()
+    crop_metric.reset()
+    drop_metric.reset()
 
     # begin training
     start_time = time.time()
@@ -174,11 +189,36 @@ def train(**kwargs):
         ##################################
         # Raw Image
         ##################################
-        y_pred_raw = net(X)
+        # raw images forward
+        y_pred_raw, feature_matrix, attention_map = net(X)
+
+        # Update Feature Center
+        feature_center_batch = F.normalize(feature_center[y], dim=-1)
+        feature_center[y] += config.beta * (feature_matrix.detach() - feature_center_batch)
+
+        ##################################
+        # Attention Cropping
+        ##################################
+        with torch.no_grad():
+            crop_images = batch_augment(X, attention_map[:, :1, :, :], mode='crop', theta=(0.4, 0.6), padding_ratio=0.1)
+
+        # crop images forward
+        y_pred_crop, _, _ = net(crop_images)
+
+        ##################################
+        # Attention Dropping
+        ##################################
+        with torch.no_grad():
+            drop_images = batch_augment(X, attention_map[:, 1:, :, :], mode='drop', theta=(0.2, 0.5))
+
+        # drop images forward
+        y_pred_drop, _, _ = net(drop_images)
 
         # loss
-        batch_loss = cross_entropy_loss(y_pred_raw, y)
-
+        batch_loss = cross_entropy_loss(y_pred_raw, y) / 3. + \
+                     cross_entropy_loss(y_pred_crop, y) / 3. + \
+                     cross_entropy_loss(y_pred_drop, y) / 3. + \
+                     center_loss(feature_matrix, feature_center_batch)
 
         # backward
         batch_loss.backward()
@@ -188,21 +228,27 @@ def train(**kwargs):
         with torch.no_grad():
             epoch_loss = loss_container(batch_loss.item())
             epoch_raw_acc = raw_metric(y_pred_raw, y)
+            epoch_crop_acc = crop_metric(y_pred_crop, y)
+            epoch_drop_acc = drop_metric(y_pred_drop, y)
 
         # end of this batch
-        batch_info = 'Loss {:.4f}, Raw Acc {:.2f}'.format(
-            epoch_loss, epoch_raw_acc[0],)
+        batch_info = 'Loss {:.4f}, Raw Acc {:.2f}, Crop Acc {:.2f}, Drop Acc{:.2f}'.format(
+            epoch_loss, epoch_raw_acc[0],
+            epoch_crop_acc[0],  epoch_drop_acc[0])
         pbar.update()
         pbar.set_postfix_str(batch_info)
 
     # end of this epoch
     logs['train_{}'.format(loss_container.name)] = epoch_loss
     logs['train_raw_{}'.format(raw_metric.name)] = epoch_raw_acc
+    logs['train_crop_{}'.format(crop_metric.name)] = epoch_crop_acc
+    logs['train_drop_{}'.format(drop_metric.name)] = epoch_drop_acc
     logs['train_info'] = batch_info
     end_time = time.time()
 
     # write log for this epoch
     logging.info('Train: {}, Time {:3.2f}'.format(batch_info, end_time - start_time))
+
 
 def validate(**kwargs):
     # Retrieve training configuration
@@ -227,7 +273,19 @@ def validate(**kwargs):
             ##################################
             # Raw Image
             ##################################
-            y_pred = net(X)
+            y_pred_raw, _, attention_map = net(X)
+
+            ##################################
+            # Object Localization and Refinement
+            ##################################
+            crop_images = batch_augment(X, attention_map, mode='crop', theta=0.1, padding_ratio=0.05)
+            y_pred_crop, _, _ = net(crop_images)
+
+            ##################################
+            # Final prediction
+            ##################################
+            y_pred = (y_pred_raw + y_pred_crop) / 2.
+
             # loss
             batch_loss = cross_entropy_loss(y_pred, y)
             epoch_loss = loss_container(batch_loss.item())

@@ -14,8 +14,8 @@ from tqdm import tqdm
 
 import config
 from models import WSDAN
-from datasets import get_trainval_datasets
-from utils import TopKAccuracyMetric, batch_augment
+from dataset.dataset import FGVC7Data
+from utils.utils import TopKAccuracyMetric, batch_augment, get_transform
 
 # GPU settings
 assert torch.cuda.is_available()
@@ -58,14 +58,14 @@ def main():
     ##################################
     # Dataset for testing
     ##################################
-    _, test_dataset = get_trainval_datasets(config.tag, resize=config.image_size)
+    test_dataset = FGVC7Data(root='./data/', phase='test', transform=get_transform(config.image_size, 'test'))
     test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False,
                              num_workers=2, pin_memory=True)
 
     ##################################
     # Initialize model
     ##################################
-    net = WSDAN(num_classes=test_dataset.num_classes, M=config.num_attentions, net=config.net)
+    net = WSDAN(num_classes=4, M=config.num_attentions, net=config.net)
 
     # Load ckpt and get state_dict
     checkpoint = torch.load(ckpt)
@@ -85,8 +85,8 @@ def main():
     ##################################
     # Prediction
     ##################################
-    raw_accuracy = TopKAccuracyMetric(topk=(1, 5))
-    ref_accuracy = TopKAccuracyMetric(topk=(1, 5))
+    raw_accuracy = TopKAccuracyMetric(topk=(1, 2))
+    ref_accuracy = TopKAccuracyMetric(topk=(1, 2))
     raw_accuracy.reset()
     ref_accuracy.reset()
 
@@ -94,9 +94,8 @@ def main():
     with torch.no_grad():
         pbar = tqdm(total=len(test_loader), unit=' batches')
         pbar.set_description('Validation')
-        for i, (X, y) in enumerate(test_loader):
+        for i,X in enumerate(test_loader):
             X = X.to(device)
-            y = y.to(device)
 
             # WS-DAN
             y_pred_raw, _, attention_maps = net(X)
@@ -129,14 +128,16 @@ def main():
                     haimg.save(os.path.join(savepath, '%03d_heat_atten.jpg' % (i * config.batch_size + batch_idx)))
 
             # Top K
-            epoch_raw_acc = raw_accuracy(y_pred_raw, y)
-            epoch_ref_acc = ref_accuracy(y_pred, y)
+            #epoch_raw_acc = raw_accuracy(y_pred_raw, y)
+            #epoch_ref_acc = ref_accuracy(y_pred, y)
 
             # end of this batch
-            batch_info = 'Val Acc: Raw ({:.2f}, {:.2f}), Refine ({:.2f}, {:.2f})'.format(
-                epoch_raw_acc[0], epoch_raw_acc[1], epoch_ref_acc[0], epoch_ref_acc[1])
+            batch_info = 'Val step {}'.format((i+1)*config.batch_size)
             pbar.update()
             pbar.set_postfix_str(batch_info)
+
+            # 处理结果
+            y_pred = F.softmax(y_pred,dim=1).numpy()
 
         pbar.close()
 

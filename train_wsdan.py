@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
 
 import config
 from models import WSDAN
@@ -55,16 +56,21 @@ def main():
     # Load dataset
     ##################################
     train_dataset = FGVC7Data(root='./data/', phase='train', transform=get_transform(config.image_size, 'train'))
-    validate_dataset = FGVC7Data(root='./data/', phase='valid', transform=get_transform(config.image_size, 'test'))
-    train_loader  = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True,
-                                               num_workers=config.workers, pin_memory=True)
-    validate_loader = DataLoader(validate_dataset, batch_size=config.batch_size, shuffle=True,
-                              num_workers=config.workers, pin_memory=True)
+    indices = range(len(train_dataset))
+    split = int(0.1 * len(train_dataset))
+    train_indices = indices[split:]
+    test_indices = indices[:split]
+    train_sampler = SubsetRandomSampler(train_indices)
+    valid_sampler = SubsetRandomSampler(test_indices)
 
+    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, sampler=train_sampler,
+                              num_workers=config.workers, pin_memory=True)
+    validate_loader = DataLoader(train_dataset, batch_size=config.batch_size, sampler=valid_sampler,
+                                 num_workers=config.workers, pin_memory=True)
 
     num_classes = 4
-    print('Train Size: {}'.format(len(train_dataset)))
-    print('Valid Size: {}'.format(len(validate_dataset)))
+    print('Train Size: {}'.format(len(train_indices)))
+    print('Valid Size: {}'.format(len(test_indices)))
     ##################################
     # Initialize model
     ##################################
@@ -127,7 +133,7 @@ def main():
     # TRAINING
     ##################################
     logging.info('Start training: Total epochs: {}, Batch size: {}, Training size: {}, Validation size: {}'.
-                 format(config.epochs, config.batch_size, len(train_dataset), len(validate_dataset)))
+                 format(config.epochs, config.batch_size, len(train_dataset), len(test_indices)))
     logging.info('')
 
     for epoch in range(start_epoch, config.epochs):

@@ -16,6 +16,13 @@ import config
 from models import WSDAN
 from dataset.dataset import FGVC7Data
 from utils.utils import TopKAccuracyMetric, batch_augment, get_transform
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--datasets', default='./data/', help='Train Dataset directory path')
+parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to use')
+args = parser.parse_args()
+
+config.net = args.net
 
 # GPU settings
 assert torch.cuda.is_available()
@@ -58,7 +65,7 @@ def main():
     ##################################
     # Dataset for testing
     ##################################
-    test_dataset = FGVC7Data(root='./data/', phase='test', transform=get_transform(config.image_size, 'test'))
+    test_dataset = FGVC7Data(root=args.datasets, phase='test', transform=get_transform(config.image_size, 'test'))
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
                              num_workers=2, pin_memory=True)
     import pandas as pd
@@ -66,7 +73,7 @@ def main():
     ##################################
     # Initialize model
     ##################################
-    net = WSDAN(num_classes=4, M=config.num_attentions, net=config.net)
+    net = WSDAN(num_classes=4, M=config.num_attentions, net=args.net)
 
     # Load ckpt and get state_dict
     checkpoint = torch.load(ckpt)

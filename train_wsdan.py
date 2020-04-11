@@ -6,6 +6,7 @@ import os
 import time
 import logging
 import warnings
+import argparse
 from tqdm import tqdm
 import torch
 import torch.nn as nn
@@ -17,6 +18,11 @@ import config
 from models import WSDAN
 from dataset.dataset import FGVC7Data
 from utils.utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment, get_transform
+parser = argparse.ArgumentParser()
+parser.add_argument('--datasets', default='./data/', help='Train Dataset directory path')
+parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to use')
+parser.add_argument('--bs', default=24, type=int,  help='batch size')
+args = parser.parse_args()
 
 # GPU settings
 assert torch.cuda.is_available()
@@ -34,6 +40,9 @@ raw_metric = TopKAccuracyMetric(topk=(1, 2))
 crop_metric = TopKAccuracyMetric(topk=(1,2 ))
 drop_metric = TopKAccuracyMetric(topk=(1,2 ))
 
+#others
+config.batch_size = args.bs
+config.net = args.net
 
 def main():
     ##################################
@@ -55,7 +64,7 @@ def main():
     ##################################
     # Load dataset
     ##################################
-    train_dataset = FGVC7Data(root='./data/', phase='train', transform=get_transform(config.image_size, 'train'))
+    train_dataset = FGVC7Data(root=args.dataset, phase='train', transform=get_transform(config.image_size, 'train'))
     indices = range(len(train_dataset))
     split = int(0.1 * len(train_dataset))
     train_indices = indices[split:]
@@ -76,7 +85,7 @@ def main():
     ##################################
     logs = {}
     start_epoch = 0
-    net = WSDAN(num_classes=num_classes, M=config.num_attentions, net=config.net, pretrained=True)
+    net = WSDAN(num_classes=num_classes, M=config.num_attentions, net=args.net, pretrained=True)
 
     # feature_center: size of (#classes, #attention_maps * #channel_features)
     feature_center = torch.zeros(num_classes, config.num_attentions * net.num_features).to(device)

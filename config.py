@@ -22,7 +22,7 @@ tag = 'bird'                # 'aircraft', 'bird', 'car', or 'dog'
 
 # saving directory of .ckpt models
 save_dir = './weights/'
-model_name = 'model.ckpt'
+model_name = 'model_{}.ckpt'.format(net)
 log_name = 'train.log'
 
 # checkpoint model for resume training

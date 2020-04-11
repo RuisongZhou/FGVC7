@@ -32,3 +32,6 @@ class efficientnet(nn.Module):
         x = x.contiguous().view(-1, x.size(1))
         x = self.fc(x)
         return x
+
+    def get_features(self):
+        return self.model.extract_features

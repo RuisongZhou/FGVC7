@@ -27,7 +27,7 @@ class FGVC7Data(Dataset):
                 label = np.argmax(df.iloc[i].values[1:])
                 labels.append(label)
                 ids[label].append(os.path.join(self.root, 'images', df.iloc[i].values[0]+'.jpg'))
-            ids[1] = ids[1] * 6
+            ids[1] = ids[1] * 5
             labels = [[i]*len(ids[i]) for i in range(4)]
             labels = list(itertools.chain.from_iterable(labels))
             ids = list(itertools.chain.from_iterable(ids))

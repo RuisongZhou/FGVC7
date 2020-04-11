@@ -85,7 +85,7 @@ def main():
     ##################################
     logs = {}
     start_epoch = 0
-    net = WSDAN(num_classes=num_classes, M=config.num_attentions, net=args.net, pretrained=True)
+    net = WSDAN(num_classes=num_classes, M=config.num_attentions, net=config.net, pretrained=True)
 
     # feature_center: size of (#classes, #attention_maps * #channel_features)
     feature_center = torch.zeros(num_classes, config.num_attentions * net.num_features).to(device)
@@ -114,7 +114,6 @@ def main():
     # Use cuda
     ##################################
     net.to(device)
-    net.cuda()
     if torch.cuda.device_count() > 1:
         net = nn.DataParallel(net)
 
@@ -155,7 +154,7 @@ def main():
         logging.info('Epoch {:03d}, LR {:g}'.format(epoch + 1, optimizer.param_groups[0]['lr']))
 
         pbar = tqdm(total=len(train_loader), unit=' batches')
-        #pbar.set_description('Epoch {}/{}'.format(epoch + 1, config.epochs))
+        pbar.set_description('Epoch {}/{}'.format(epoch + 1, config.epochs))
 
         train(logs=logs,
               data_loader=train_loader,
@@ -248,12 +247,11 @@ def train(**kwargs):
             epoch_drop_acc = drop_metric(y_pred_drop, y)
 
         # end of this batch
-        batch_info = 'Raw Acc {:.2f}, Crop Acc {:.2f}, Drop Acc{:.2f} Loss {:.4f}, LR {:.6f}'.format(
+        batch_info = 'Loss {:.4f}, LR {:.6f} Raw Acc {:.2f}, Crop Acc {:.2f}, Drop Acc{:.2f}'.format(
             epoch_loss,  optimizer.param_groups[0]['lr'], epoch_raw_acc[0],
             epoch_crop_acc[0],  epoch_drop_acc[0])
         pbar.update()
         pbar.set_postfix_str(batch_info)
-        #logging.info(batch_info)
 
     # end of this epoch
     logs['train_{}'.format(loss_container.name)] = epoch_loss

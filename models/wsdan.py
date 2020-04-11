@@ -84,9 +84,8 @@ class WSDAN(nn.Module):
             self.num_features = 512 * self.features[-1][-1].expansion
         elif 'b' in net:
             net = net if len(net) == 2 else net[-2:]
-            backbone = efficientnet(4, net).cuda()
-            self.features = backbone.get_features()
-            self.num_features = 1792
+            self.features = efficientnet(net)
+            self.num_features = self.features.feature_size
         else:
             raise ValueError('Unsupported net: %s' % net)
 
@@ -106,7 +105,7 @@ class WSDAN(nn.Module):
 
         # Feature Maps, Attention Maps and Feature Matrix
         feature_maps = self.features(x)
-        if self.net != 'inception_mixed_7c':
+        if self.num_features < 1024: #self.net != 'inception_mixed_7c':
             attention_maps = self.attentions(feature_maps)
         else:
             attention_maps = feature_maps[:, :self.M, ...]

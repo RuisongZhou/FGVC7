@@ -84,7 +84,8 @@ class WSDAN(nn.Module):
             self.num_features = 512 * self.features[-1][-1].expansion
         elif 'b' in net:
             net = net if len(net) == 2 else net[-2:]
-            self.features = efficientnet(4, net).get_features()
+            backbone = efficientnet(4, net).cuda()
+            self.features = backbone.get_features()
             self.num_features = 1024
         else:
             raise ValueError('Unsupported net: %s' % net)

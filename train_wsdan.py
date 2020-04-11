@@ -64,7 +64,7 @@ def main():
     ##################################
     # Load dataset
     ##################################
-    train_dataset = FGVC7Data(root=args.dataset, phase='train', transform=get_transform(config.image_size, 'train'))
+    train_dataset = FGVC7Data(root=args.datasets, phase='train', transform=get_transform(config.image_size, 'train'))
     indices = range(len(train_dataset))
     split = int(0.1 * len(train_dataset))
     train_indices = indices[split:]

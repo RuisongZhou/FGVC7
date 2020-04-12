@@ -12,7 +12,7 @@ learning_rate = 1e-3        # initial learning rate
 ##################################################
 image_size = (448, 448)     # size of training images
 net = 'inception_mixed_6e'  # feature extractor
-num_attentions = 32        # number of attention maps
+num_attentions = 16        # number of attention maps
 beta = 5e-2                 # param for update feature centers
 
 ##################################################
@@ -35,3 +35,7 @@ ckpt = False
 visualize = False
 eval_ckpt = save_dir + model_name
 eval_savepath = './result/'
+
+def refresh():
+    model_name = 'model_{}.ckpt'.format(net)
+    eval_ckpt = save_dir + model_name

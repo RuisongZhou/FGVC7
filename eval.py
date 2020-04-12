@@ -23,6 +23,7 @@ parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to u
 args = parser.parse_args()
 
 config.net = args.net
+config.refresh()
 
 # GPU settings
 assert torch.cuda.is_available()

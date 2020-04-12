@@ -43,6 +43,7 @@ drop_metric = TopKAccuracyMetric(topk=(1,2))
 #others
 config.batch_size = args.bs
 config.net = args.net
+config.refresh()
 
 def main():
     ##################################

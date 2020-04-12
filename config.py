@@ -28,8 +28,8 @@ class Config():
         self.log_name = 'train.log'
 
         # checkpoint model for resume training
-        ckpt = False
-        # ckpt = save_dir + model_name
+        self.ckpt = False
+        #self.ckpt = self.save_dir + self.model_name
 
         ##################################################
         # Eval Config

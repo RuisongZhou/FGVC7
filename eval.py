@@ -116,7 +116,7 @@ def main():
 
             y_pred_crop, _, _ = net(crop_image)
             y_pred = (y_pred_raw + y_pred_crop) / 2.
-
+            #y_pred = y_pred_raw
             if visualize:
                 # reshape attention maps
                 attention_maps = F.upsample_bilinear(attention_maps, size=(X.size(2), X.size(3)))

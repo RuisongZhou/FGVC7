@@ -10,7 +10,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 
-
 ##############################################
 # Center Loss for Attention Regularization
 ##############################################

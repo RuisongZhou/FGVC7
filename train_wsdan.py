@@ -212,6 +212,8 @@ def train(**kwargs):
         feature_center_batch = F.normalize(feature_center[y], dim=-1)
         feature_center[y] += config.beta * (feature_matrix.detach() - feature_center_batch)
 
+        loss_1 = cross_entropy_loss(y_pred_raw, y) / 3. + center_loss(feature_matrix, feature_center_batch)
+        loss_1.backward()
         ##################################
         # Attention Cropping
         ##################################
@@ -220,7 +222,8 @@ def train(**kwargs):
 
         # crop images forward
         y_pred_crop, _, _ = net(crop_images)
-
+        loss_2 = cross_entropy_loss(y_pred_crop, y) / 3
+        loss_2.backward()
         ##################################
         # Attention Dropping
         ##################################
@@ -229,20 +232,21 @@ def train(**kwargs):
 
         # drop images forward
         y_pred_drop, _, _ = net(drop_images)
-
+        loss_3 = cross_entropy_loss(y_pred_drop, y) / 3.
+        loss_3.backward()
         # loss
-        batch_loss = cross_entropy_loss(y_pred_raw, y) / 3. + \
-                     cross_entropy_loss(y_pred_crop, y) / 3. + \
-                     cross_entropy_loss(y_pred_drop, y) / 3. + \
-                     center_loss(feature_matrix, feature_center_batch)
-
-        # backward
-        batch_loss.backward()
+        # batch_loss = cross_entropy_loss(y_pred_raw, y) / 3. + \
+        #              cross_entropy_loss(y_pred_crop, y) / 3. + \
+        #              cross_entropy_loss(y_pred_drop, y) / 3. + \
+        #              center_loss(feature_matrix, feature_center_batch)
+        #
+        # # backward
+        # batch_loss.backward()
         optimizer.step()
 
         # metrics: loss and top-1,5 error
         with torch.no_grad():
-            epoch_loss = loss_container(batch_loss.item())
+            epoch_loss = loss_container(loss_1.item()+loss_2.item()+loss_3.item())
             epoch_raw_acc = raw_metric(y_pred_raw, y)
             epoch_crop_acc = crop_metric(y_pred_crop, y)
             epoch_drop_acc = drop_metric(y_pred_drop, y)

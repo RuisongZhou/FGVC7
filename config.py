@@ -24,7 +24,7 @@ class Config():
 
         # saving directory of .ckpt models
         self.save_dir = './weights/'
-        self.model_name = 'model_{}.ckpt'.format(self.net)
+        self.model_name = 'model_{}_{}.ckpt'.format(self.net, self.image_size[0])
         self.log_name = 'train.log'
 
         # checkpoint model for resume training
@@ -40,5 +40,5 @@ class Config():
 
 
     def refresh(self):
-        self.model_name = 'model_{}.ckpt'.format(self.net)
+        self.model_name = 'model_{}_{}.ckpt'.format(self.net, self.image_size[0])
         self.eval_ckpt = self.save_dir + self.model_name

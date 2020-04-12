@@ -1,41 +1,44 @@
-##################################################
-# Training Config
-##################################################
-GPU = '0'                   # GPU
-workers = 4                 # number of Dataloader workers
-epochs = 80                # number of epochs
-batch_size = 16             # batch size
-learning_rate = 1e-3        # initial learning rate
 
-##################################################
-# Model Config
-##################################################
-image_size = (448, 448)     # size of training images
-net = 'inception_mixed_6e'  # feature extractor
-num_attentions = 8        # number of attention maps
-beta = 5e-2                 # param for update feature centers
+class Config():
+    def __init__(self):
+        ##################################################
+        # Training Config
+        ##################################################
+        self.GPU = '0'                   # GPU
+        self.workers = 4                 # number of Dataloader workers
+        self.epochs = 80                # number of epochs
+        self.batch_size = 16             # batch size
+        self.learning_rate = 1e-3        # initial learning rate
 
-##################################################
-# Dataset/Path Config
-##################################################
-tag = 'bird'                # 'aircraft', 'bird', 'car', or 'dog'
+        ##################################################
+        # Model Config
+        ##################################################
+        self.image_size = (448, 448)     # size of training images
+        self.net = 'inception_mixed_6e'  # feature extractor
+        self.num_attentions = 8        # number of attention maps
+        self.beta = 5e-2                 # param for update feature centers
 
-# saving directory of .ckpt models
-save_dir = './weights/'
-model_name = 'model_{}.ckpt'.format(net)
-log_name = 'train.log'
+        ##################################################
+        # Dataset/Path Config
+        ##################################################
 
-# checkpoint model for resume training
-ckpt = False
-# ckpt = save_dir + model_name
+        # saving directory of .ckpt models
+        self.save_dir = './weights/'
+        self.model_name = 'model_{}.ckpt'.format(self.net)
+        self.log_name = 'train.log'
 
-##################################################
-# Eval Config
-##################################################
-visualize = False
-eval_ckpt = save_dir + model_name
-eval_savepath = './result/'
+        # checkpoint model for resume training
+        ckpt = False
+        # ckpt = save_dir + model_name
 
-def refresh():
-    model_name = 'model_{}.ckpt'.format(net)
-    eval_ckpt = save_dir + model_name
+        ##################################################
+        # Eval Config
+        ##################################################
+        self.visualize = False
+        self.eval_ckpt = self.save_dir + self.model_name
+        self.eval_savepath = './result/'
+
+
+    def refresh(self):
+        self.model_name = 'model_{}.ckpt'.format(self.net)
+        self.eval_ckpt = self.save_dir + self.model_name

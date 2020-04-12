@@ -15,10 +15,12 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
-import config
+from config import Config
 from models import efficientnet
 from dataset.dataset import FGVC7Data
 from utils.utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment, get_transform
+
+config = Config()
 
 # GPU settings
 assert torch.cuda.is_available()

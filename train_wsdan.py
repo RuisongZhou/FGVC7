@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
-import config
+from config import Config
 from models import WSDAN
 from dataset.dataset import FGVC7Data
 from utils.utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment, get_transform
@@ -23,6 +23,11 @@ parser.add_argument('--datasets', default='./data/', help='Train Dataset directo
 parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to use')
 parser.add_argument('--bs', default=24, type=int,  help='batch size')
 args = parser.parse_args()
+config = Config()
+#others
+config.batch_size = args.bs
+config.net = args.net
+config.refresh()
 
 # GPU settings
 assert torch.cuda.is_available()
@@ -40,10 +45,6 @@ raw_metric =  TopKAccuracyMetric(topk=(1,2))
 crop_metric = TopKAccuracyMetric(topk=(1,2))
 drop_metric = TopKAccuracyMetric(topk=(1,2))
 
-#others
-config.batch_size = args.bs
-config.net = args.net
-config.refresh()
 
 def main():
     ##################################

@@ -12,7 +12,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-import config
+from config import Config
 from models import WSDAN
 from dataset.dataset import FGVC7Data
 from utils.utils import TopKAccuracyMetric, batch_augment, get_transform
@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--datasets', default='./data/', help='Train Dataset directory path')
 parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to use')
 args = parser.parse_args()
-
+config = config()
 config.net = args.net
 config.refresh()
 

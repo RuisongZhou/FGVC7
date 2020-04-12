@@ -70,7 +70,7 @@ def main():
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
                              num_workers=2, pin_memory=True)
     import pandas as pd
-    sample_submission = pd.read_csv('./data/sample_submission.csv')
+    sample_submission = pd.read_csv(os.path.join(args.datasets, 'sample_submission.csv'))
     ##################################
     # Initialize model
     ##################################

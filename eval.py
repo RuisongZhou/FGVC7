@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--datasets', default='./data/', help='Train Dataset directory path')
 parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to use')
 args = parser.parse_args()
-config = config()
+config = Config()
 config.net = args.net
 config.refresh()
 

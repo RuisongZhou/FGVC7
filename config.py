@@ -15,7 +15,7 @@ class Config():
         ##################################################
         self.image_size = (448, 448)     # size of training images
         self.net = 'inception_mixed_6e'  # feature extractor
-        self.num_attentions = 8        # number of attention maps
+        self.num_attentions = 32        # number of attention maps
         self.beta = 5e-2                 # param for update feature centers
 
         ##################################################

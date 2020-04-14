@@ -9,6 +9,7 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
+from utils.augmentations import *
 
 ##############################################
 # Center Loss for Attention Regularization
@@ -188,17 +189,20 @@ def batch_augment(images, attention_map, mode='crop', theta=0.5, padding_ratio=0
 ##################################
 def get_transform(resize, phase='train'):
     if phase == 'train':
-        return transforms.Compose([
-            transforms.Resize(size=(int(resize[0] / 0.875), int(resize[1] / 0.875))),
-            transforms.RandomCrop(resize),
-            transforms.RandomHorizontalFlip(0.5),
-            transforms.ColorJitter(brightness=0.126, saturation=0.5),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        return Compose([
+            Resize(size=(int(resize[0] / 0.875), int(resize[1] / 0.875))),
+            RandomCrop(resize[0]),
+            RandomMirror(),
+            #PhotometricDistort(),
+            addnoise(scale=(0,60)),
+            addblur(simga=(0.0,3.0)),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ToTensor(),
+
         ])
     else:
-        return transforms.Compose([
-            transforms.Resize(size=(int(resize[0]), int(resize[1]))),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        return Compose([
+            Resize(size=(int(resize[0]), int(resize[1]))),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ToTensor(),
         ])

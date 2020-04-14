@@ -5,18 +5,20 @@ Revised: Dec 03,2019 - Yuchong Gu
 import os
 import logging
 import warnings
+from collections import Counter
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
+import numpy as np
 from config import Config
 from models import WSDAN
 from dataset.dataset import FGVC7Data
 from utils.utils import TopKAccuracyMetric, batch_augment, get_transform
 import argparse
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--datasets', default='./data/', help='Train Dataset directory path')
 parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to use')
@@ -66,7 +68,8 @@ def main():
     ##################################
     # Dataset for testing
     ##################################
-    test_dataset = FGVC7Data(root=args.datasets, phase='test', transform=get_transform(config.image_size, 'test'))
+    test_dataset = FGVC7Data(root=args.datasets, phase='test',
+                             transform=get_transform([config.image_size[0] * 2, config.image_size[1] * 2], 'test'))
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
                              num_workers=2, pin_memory=True)
     import pandas as pd
@@ -104,8 +107,15 @@ def main():
     with torch.no_grad():
         pbar = tqdm(total=len(test_loader), unit=' batches')
         pbar.set_description('Validation')
-        for i,X in enumerate(test_loader):
-
+        for i, input in enumerate(test_loader):
+            # x1 = input[:, :, :config.image_size[0], :config.image_size[1]]
+            # x2 = input[:, :, :config.image_size[0], config.image_size[1]:]
+            # x3 = input[:, :, config.image_size[0]:, :config.image_size[1]]
+            # x4 = input[:, :, config.image_size[0]:, config.image_size[1]:]
+            # x5 = input[:, :, config.image_size[0] // 2:config.image_size[0] // 2 + config.image_size[0],
+            #      config.image_size[1] // 2:config.image_size[1] // 2 + config.image_size[1]]
+            # X = torch.cat([x1,x2,x3,x4,x5],dim=0)
+            X, _ = input
             X = X.to(device)
 
             # WS-DAN
@@ -116,7 +126,7 @@ def main():
 
             y_pred_crop, _, _ = net(crop_image)
             y_pred = (y_pred_raw + y_pred_crop) / 2.
-            #y_pred = y_pred_raw
+            # y_pred = y_pred_raw
             if visualize:
                 # reshape attention maps
                 attention_maps = F.upsample_bilinear(attention_maps, size=(X.size(2), X.size(3)))
@@ -139,15 +149,17 @@ def main():
                     haimg.save(os.path.join(savepath, '%03d_heat_atten.jpg' % (i * config.batch_size + batch_idx)))
 
             # end of this batch
-            batch_info = 'Val step {}'.format((i+1))
+
+
+            # 处理结果
+            y_pred = F.softmax(y_pred, dim=1).cpu().numpy()
+            result.append(y_pred)
+
+            batch_info = 'Val step {}'.format((i + 1))
             pbar.update()
             pbar.set_postfix_str(batch_info)
 
-            # 处理结果
-            y_pred = F.softmax(y_pred,dim=1).cpu().numpy()
-            result.append(y_pred)
         pbar.close()
-
 
     healthy = []
     multiple_disease = []
@@ -163,5 +175,7 @@ def main():
     sample_submission['rust'] = rust
     sample_submission['scab'] = scab
     sample_submission.to_csv('submission.csv', index=False)
+
+
 if __name__ == '__main__':
     main()

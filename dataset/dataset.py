@@ -59,9 +59,12 @@ class FGVC7Data(Dataset):
 
 
 if __name__ == '__main__':
-    dataset = FGVC7Data('./data/', phase='train')
+    import sys
+    sys.path.append(os.path.abspath('./'))
+    from utils.utils import get_transform
+    dataset = FGVC7Data('./data/', transform=get_transform((448,448), 'train'), phase='train')
     from torch.utils.data import DataLoader
     loader = DataLoader(dataset,batch_size=16)
-    loader = iter(loader)
-    x, y = next(loader)
-    x, y = next(loader)
+    for i, (x,y) in enumerate(loader):
+        if i == 10:
+            break

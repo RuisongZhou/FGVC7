@@ -22,6 +22,7 @@ class Compose(object):
         self.transforms = transforms
 
     def __call__(self, img, labels=None):
+
         for t in self.transforms:
             img, labels = t(img, labels)
         return img, labels
@@ -248,4 +249,4 @@ class RandomRotate(object):
         angle = random.randrange(self.angle)
         M = cv2.getRotationMatrix2D(center, angle, 1)
         rotated = cv2.warpAffine(image, M, (w, h))
-        return rotated
+        return rotated, labels

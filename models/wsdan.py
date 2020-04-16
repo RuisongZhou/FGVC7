@@ -105,7 +105,7 @@ class WSDAN(nn.Module):
 
         # Feature Maps, Attention Maps and Feature Matrix
         feature_maps = self.features(x)
-        if self.num_features < 1024: #self.net != 'inception_mixed_7c':
+        if self.net != 'inception_mixed_7c':
             attention_maps = self.attentions(feature_maps)
         else:
             attention_maps = feature_maps[:, :self.M, ...]

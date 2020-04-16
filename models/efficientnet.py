@@ -17,14 +17,14 @@ size_dict = {
     }
 
 feature_dict = {
-        'b0':  320,
-        'b1':  320,
-        'b2':  352,
-        'b3':  384,
-        'b4':  448,
-        'b5':  512,
-        'b6':  576,
-        'b7':  640,
+        'b0':  1280, #320,
+        'b1':  1280, #320,
+        'b2':  1408, #352,
+        'b3':  1536, #384,
+        'b4':  1792, #448,
+        'b5':  2048, #512,
+        'b6':  2304, #576,
+        'b7':  2560, #640,
 }
 import torch
 from torch import nn
@@ -209,7 +209,7 @@ class EfficientNet(nn.Module):
             x = block(x, drop_connect_rate=drop_connect_rate)
 
         # Head
-        #x = self._swish(self._bn1(self._conv_head(x)))
+        x = self._swish(self._bn1(self._conv_head(x)))
         return x
 
     def forward(self, inputs):
@@ -268,7 +268,7 @@ class efficientnet(nn.Module):
         return self.model.extract_features
 
 if __name__ == '__main__':
-    model = EfficientNet.from_name('efficientnet-b1').extract_features
+    model = EfficientNet.from_name('efficientnet-b7').extract_features
     import torch
     x = torch.randn([1,3,224,224])
     print(model(x).size())

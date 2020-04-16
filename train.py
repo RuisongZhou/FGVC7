@@ -23,9 +23,16 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--datasets', default='./data/', help='Train Dataset directory path')
 parser.add_argument('--net', default='b0', help='Choose net to use')
+parser.add_argument('--bs', default=24, type=int,  help='batch size')
+parser.add_argument('--ckpt', default=None, type=str, help='resume train')
 args = parser.parse_args()
 
 config = Config()
+#others
+config.batch_size = args.bs
+config.net = args.net
+config.ckpt = args.ckpt
+config.refresh()
 
 # GPU settings
 assert torch.cuda.is_available()

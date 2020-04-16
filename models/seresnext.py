@@ -450,7 +450,7 @@ class se_resnext50(nn.Module):
         self.model = se_resnext50_32x4d()
 
         self.dropout = nn.Dropout(0.2)
-        self.avg_pool = nn.AvgPool2d(7, stride=1)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.last_linear = nn.Linear(512 * 4, num_classes)
 
     def logits(self, x):
@@ -471,7 +471,7 @@ class se_resnext101(nn.Module):
         self.model = se_resnext101_32x4d()
 
         self.dropout = nn.Dropout(0.2)
-        self.avg_pool = nn.AvgPool2d(7, stride=1)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.last_linear = nn.Linear(512 * 4, num_classes)
 
     def logits(self, x):

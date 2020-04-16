@@ -447,7 +447,7 @@ def se_resnext101_32x4d(num_classes=1000, pretrained='imagenet'):
 class se_resnext50(nn.Module):
     def __init__(self, num_classes=4):
         super(se_resnext50, self).__init__()
-        self.features = se_resnext50_32x4d().features
+        self.model = se_resnext50_32x4d()
 
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AvgPool2d(7, stride=1)
@@ -461,14 +461,14 @@ class se_resnext50(nn.Module):
         return x
 
     def forward(self, x):
-        x = self.features(x)
+        x = self.model.features(x)
         x = self.logits(x)
         return x
 
 class se_resnext101(nn.Module):
     def __init__(self, num_classes=4):
         super(se_resnext101, self).__init__()
-        self.features = se_resnext101_32x4d().features
+        self.model = se_resnext101_32x4d()
 
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AvgPool2d(7, stride=1)
@@ -482,6 +482,6 @@ class se_resnext101(nn.Module):
         return x
 
     def forward(self, x):
-        x = self.features(x)
+        x = self.model.features(x)
         x = self.logits(x)
         return x

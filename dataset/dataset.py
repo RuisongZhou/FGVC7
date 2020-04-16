@@ -59,5 +59,9 @@ class FGVC7Data(Dataset):
 
 
 if __name__ == '__main__':
-    dataset = FGVC7Data('./data/plant-pathology-2020-fgvc7', phase='test')
-    print(dataset[0])
+    dataset = FGVC7Data('./data/', phase='train')
+    from torch.utils.data import DataLoader
+    loader = DataLoader(dataset,batch_size=16)
+    loader = iter(loader)
+    x, y = next(loader)
+    x, y = next(loader)

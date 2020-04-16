@@ -62,7 +62,7 @@ def main():
     # Dataset for testing
     ##################################
     test_dataset = FGVC7Data(root=args.datasets, phase='test',
-                             transform=get_transform([config.image_size[0], config.image_size[1]], 'tta')[0])
+                             transform=get_transform(config.image_size, 'tta')[0])
     import pandas as pd
     sample_submission = pd.read_csv(os.path.join(args.datasets, 'sample_submission.csv'))
     ##################################

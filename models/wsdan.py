@@ -86,6 +86,7 @@ class WSDAN(nn.Module):
             net = net if len(net) == 2 else net[-2:]
             self.features = efficientnet(net)
             self.num_features = self.features.feature_size
+            self.features = self.features.get_features
         else:
             raise ValueError('Unsupported net: %s' % net)
 

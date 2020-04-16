@@ -256,12 +256,25 @@ class EfficientNet(nn.Module):
 
 
 class efficientnet(nn.Module):
-    def __init__(self, size):
+    def __init__(self, size, num_classes=4):
         super(efficientnet, self).__init__()
         self.model = EfficientNet.from_pretrained(size_dict[size])
         self.feature_size = feature_dict[size]
+
+        self.dropout = nn.Dropout(0.2)
+        self.avg_pool = nn.AvgPool2d(7, stride=1)
+        self.last_linear = nn.Linear(self.feature_size, num_classes)
+
+    def logits(self, x):
+        x = self.avg_pool(x)
+        x = self.dropout(x)
+        x = x.view(x.size(0), -1)
+        x = self.last_linear(x)
+        return x
+
     def forward(self, x):
         x = self.model.extract_features(x)
+        x = self.logits(x)
         return x
 
     def get_features(self):

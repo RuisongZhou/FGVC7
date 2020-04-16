@@ -4,14 +4,11 @@
 # @Author  : RuisongZhou
 # @Mail    : rhyszhou99@gmail.com
 
-import os
+import os, sys
 import time
 import logging
 import warnings
 from tqdm import tqdm
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
@@ -20,6 +17,14 @@ from models import *
 from dataset.dataset import FGVC7Data
 from utils.utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment, get_transform
 from utils.loss import *
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--datasets', default='./data/', help='Train Dataset directory path')
+parser.add_argument('--net', default='b0', help='Choose net to use')
+args = parser.parse_args()
+
 config = Config()
 
 # GPU settings
@@ -34,6 +39,19 @@ cross_entropy_loss = LabelSmoothSoftmaxCEV1()
 # loss and metric
 loss_container = AverageMeter(name='loss')
 raw_metric = TopKAccuracyMetric(topk=(1,2))
+
+def choose_net(name: str):
+    if len(name) == 2 and name[0] == 'b':
+        model = efficientnet(size=name)
+    elif name.lower() == 'seresnext50':
+        model = se_resnext50()
+    elif name.lower() == 'seresnext101':
+        model = se_resnext101()
+    else:
+        logging.fatal("The net type is wrong.")
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+    return model
 
 def main():
     ##################################
@@ -76,7 +94,7 @@ def main():
     ##################################
     logs = {}
     start_epoch = 0
-    net = se_resnext50()
+    net = choose_net(args.net)
 
     if config.ckpt:
         # Load ckpt and get state_dict

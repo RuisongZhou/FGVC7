@@ -7,14 +7,9 @@
 Created: Nov 22,2019 - Yuchong Gu
 Revised: Dec 03,2019 - Yuchong Gu
 """
-import os
+import os, sys
 import logging
 import warnings
-from collections import Counter
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torchvision import transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
@@ -38,7 +33,18 @@ os.environ['CUDA_VISIBLE_DEVICES'] = config.GPU
 device = torch.device("cuda")
 torch.backends.cudnn.benchmark = True
 
-
+def choose_net(name: str):
+    if len(name) == 2 and name[0] == 'b':
+        model = efficientnet(size=name)
+    elif name.lower() == 'seresnext50':
+        model = se_resnext50()
+    elif name.lower() == 'seresnext101':
+        model = se_resnext101()
+    else:
+        logging.fatal("The net type is wrong.")
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+    return model
 
 def main():
     logging.basicConfig(
@@ -62,7 +68,7 @@ def main():
     ##################################
     # Initialize model
     ##################################
-    net = WSDAN(num_classes=4, M=config.num_attentions, net=args.net)
+    net = choose_net(args.net)
 
     # Load ckpt and get state_dict
     checkpoint = torch.load(ckpt)

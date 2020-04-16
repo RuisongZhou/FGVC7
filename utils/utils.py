@@ -190,19 +190,43 @@ def batch_augment(images, attention_map, mode='crop', theta=0.5, padding_ratio=0
 def get_transform(resize, phase='train'):
     if phase == 'train':
         return Compose([
-            Resize(size=(int(resize[0] / 0.875), int(resize[1] / 0.875))),
+            Resize(size=(int(resize[0] / 0.8), int(resize[1] / 0.8))),
             RandomCrop(resize[0]),
-            RandomMirror(),
-            #PhotometricDistort(),
-            addnoise(scale=(0,60)),
-            addblur(simga=(0.0,3.0)),
+            HorizontalFilp(),
+            VerticalFlip(),
+            RandomRotate(90),
+            dropout(rate=(0,30)),       #Cutout
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ToTensor(),
 
         ])
-    else:
+    elif phase == 'test':
         return Compose([
             Resize(size=(int(resize[0]), int(resize[1]))),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ToTensor(),
         ])
+
+    elif phase == 'tta':
+        aug0 = Compose([
+            Resize(size=(int(resize[0]/0.8), int(resize[1]/0.8))),
+            RandomCrop(resize[0]),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ToTensor(),
+        ])
+        aug1 =  Compose([
+            Resize(size=(int(resize[0]/0.8), int(resize[1]/0.8))),
+            RandomCrop(resize[0]),
+            HorizontalFilp(),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ToTensor(),
+        ])
+        aug2 = Compose([
+            Resize(size=(int(resize[0] / 0.8), int(resize[1] / 0.8))),
+            RandomCrop(resize[0]),
+            VerticalFlip(),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ToTensor(),
+        ])
+
+        return [aug0, aug1, aug2]

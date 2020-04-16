@@ -6,7 +6,7 @@ class Config():
         ##################################################
         self.GPU = '0'                   # GPU
         self.workers = 4                 # number of Dataloader workers
-        self.epochs = 80                # number of epochs
+        self.epochs = 40                # number of epochs
         self.batch_size = 16             # batch size
         self.learning_rate = 1e-3        # initial learning rate
 

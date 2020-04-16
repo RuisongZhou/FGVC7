@@ -26,14 +26,20 @@ class Compose(object):
             img, labels = t(img, labels)
         return img, labels
 
-class RandomMirror(object):
+class HorizontalFilp(object):
     def __call__(self, image, labels=None):
         if np.random.randint(2):
             image = cv2.flip(image, 1)
         return image, labels
 
+class VerticalFlip(object):
+    def __call__(self, image, labels=None):
+        if np.random.randint(2):
+            image = cv2.flip(image, 0)
+        return image, labels
+
 class dropout(object):
-    def __init__(self,rate,size):
+    def __init__(self,rate,size=None):
         self.trans = CoarseDropout(rate, size_percent=size)
     def __call__(self, image, label=None):
         return self.trans.augment_image(image), label
@@ -63,14 +69,6 @@ class Resize(object):
                                    self.size[1]))
         return image, labels
 
-class SubtractMeans(object):
-    def __init__(self, mean):
-        self.mean = np.array(mean, dtype=np.float32)
-
-    def __call__(self, image, labels=None):
-        image = image.astype(np.float32)
-        image -= self.mean
-        return image.astype(np.float32), labels
 
 class Normalize(object):
     def __init__(self, mean, std):
@@ -240,3 +238,14 @@ class RandomCrop(object):
         x = random.randrange(width-self.size)
         y = random.randrange(height-self.size)
         return image[x:x+self.size, y:y+self.size], labels
+
+class RandomRotate(object):
+    def __init__(self, angle):
+        self.angle = angle
+    def __call__(self, image, labels=None):
+        h, w,_  = image.shape
+        center = (w // 2, h // 2)
+        angle = random.randrange(self.angle)
+        M = cv2.getRotationMatrix2D(center, angle, 1)
+        rotated = cv2.warpAffine(image, M, (w, h))
+        return rotated

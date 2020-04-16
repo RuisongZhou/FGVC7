@@ -16,21 +16,20 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from config import Config
-from models import efficientnet
+from models import *
 from dataset.dataset import FGVC7Data
 from utils.utils import CenterLoss, AverageMeter, TopKAccuracyMetric, ModelCheckpoint, batch_augment, get_transform
-
+from utils.loss import *
 config = Config()
 
 # GPU settings
 assert torch.cuda.is_available()
 os.environ['CUDA_VISIBLE_DEVICES'] = config.GPU
-device = torch.device("cuda")
+device = torch.device("cuda:0")
 torch.backends.cudnn.benchmark = True
 
 # General loss functions
-cross_entropy_loss = nn.CrossEntropyLoss()
-center_loss = CenterLoss()
+cross_entropy_loss = LabelSmoothSoftmaxCEV1()
 
 # loss and metric
 loss_container = AverageMeter(name='loss')
@@ -54,7 +53,7 @@ def main():
     warnings.filterwarnings("ignore")
 
     ##################################
-    # Load dataset
+    # Load dataset  TODO: 10-fold cross validation
     ##################################
     train_dataset = FGVC7Data(root='./data/', phase='train', transform=get_transform(config.image_size, 'train'))
     indices = range(len(train_dataset))
@@ -77,7 +76,7 @@ def main():
     ##################################
     logs = {}
     start_epoch = 0
-    net = efficientnet(num_classes=num_classes,size='b0')
+    net = se_resnext50()
 
     if config.ckpt:
         # Load ckpt and get state_dict
@@ -86,7 +85,6 @@ def main():
         # Get epoch and some logs
         logs = checkpoint['logs']
         start_epoch = int(logs['epoch'])
-
         # Load weights
         state_dict = checkpoint['state_dict']
         net.load_state_dict(state_dict)
@@ -108,7 +106,7 @@ def main():
     optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-5)
 
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.9, patience=2)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.9)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20], gamma=0.1)
 
     ##################################
     # ModelCheckpoint
@@ -179,15 +177,9 @@ def train(**kwargs):
         # obtain data for training
         X = X.to(device)
         y = y.to(device)
-
-        ##################################
-        # Raw Image
-        ##################################
         y_pred_raw = net(X)
-
         # loss
         batch_loss = cross_entropy_loss(y_pred_raw, y)
-
 
         # backward
         batch_loss.backward()
@@ -199,8 +191,8 @@ def train(**kwargs):
             epoch_raw_acc = raw_metric(y_pred_raw, y)
 
         # end of this batch
-        batch_info = 'Loss {:.4f}, Raw Acc {:.2f}'.format(
-            epoch_loss, epoch_raw_acc[0],)
+        batch_info = 'Loss {:.4f}, Raw Acc ({:.2f} {:.2f})'.format(
+            epoch_loss, epoch_raw_acc[0], epoch_raw_acc[1])
         pbar.update()
         pbar.set_postfix_str(batch_info)
 

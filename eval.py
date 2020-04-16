@@ -69,7 +69,7 @@ def main():
     # Dataset for testing
     ##################################
     test_dataset = FGVC7Data(root=args.datasets, phase='test',
-                             transform=get_transform([config.image_size[0] * 2, config.image_size[1] * 2], 'test'))
+                             transform=get_transform([config.image_size[0] , config.image_size[1]], 'test'))
     test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False,
                              num_workers=2, pin_memory=True)
     import pandas as pd
@@ -108,25 +108,18 @@ def main():
         pbar = tqdm(total=len(test_loader), unit=' batches')
         pbar.set_description('Validation')
         for i, input in enumerate(test_loader):
-            # x1 = input[:, :, :config.image_size[0], :config.image_size[1]]
-            # x2 = input[:, :, :config.image_size[0], config.image_size[1]:]
-            # x3 = input[:, :, config.image_size[0]:, :config.image_size[1]]
-            # x4 = input[:, :, config.image_size[0]:, config.image_size[1]:]
-            # x5 = input[:, :, config.image_size[0] // 2:config.image_size[0] // 2 + config.image_size[0],
-            #      config.image_size[1] // 2:config.image_size[1] // 2 + config.image_size[1]]
-            # X = torch.cat([x1,x2,x3,x4,x5],dim=0)
             X, _ = input
             X = X.to(device)
 
             # WS-DAN
             y_pred_raw, _, attention_maps = net(X)
 
-            # Augmentation with crop_mask
-            crop_image = batch_augment(X, attention_maps, mode='crop', theta=0.1, padding_ratio=0.05)
-
-            y_pred_crop, _, _ = net(crop_image)
-            y_pred = (y_pred_raw + y_pred_crop) / 2.
-            # y_pred = y_pred_raw
+            # # Augmentation with crop_mask
+            # crop_image = batch_augment(X, attention_maps, mode='crop', theta=0.1, padding_ratio=0.05)
+            #
+            # y_pred_crop, _, _ = net(crop_image)
+            # y_pred = (y_pred_raw + y_pred_crop) / 2.
+            y_pred = y_pred_raw
             if visualize:
                 # reshape attention maps
                 attention_maps = F.upsample_bilinear(attention_maps, size=(X.size(2), X.size(3)))

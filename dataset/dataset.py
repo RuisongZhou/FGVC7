@@ -45,11 +45,14 @@ class FGVC7Data(Dataset):
     def __len__(self):
         return len(self.ids)
 
+    def set_transform(self, transform):
+        self.transform = transform
+
     def __getitem__(self, item):
         id = self.ids[item]
         image = cv2.imread(id)  # (C, H, W)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        label = self.labels[item] if self.phase =='train' else None
+        label = self.labels[item] if self.phase =='train' else 0
         if self.transform != None:
             image, _ = self.transform(image, label)
         return image, label

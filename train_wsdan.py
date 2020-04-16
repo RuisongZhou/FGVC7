@@ -301,7 +301,7 @@ def validate(**kwargs):
             ##################################
             # Object Localization and Refinement
             ##################################
-            crop_images = batch_augment(X, attention_map, mode='crop', theta=0.1, padding_ratio=0.05)
+            crop_images = batch_augment(X, attention_map, mode='crop', theta=0.4, padding_ratio=0.05)
             y_pred_crop, _, _ = net(crop_images)
 
             ##################################

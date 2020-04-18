@@ -25,6 +25,7 @@ parser.add_argument('--datasets', default='./data/', help='Train Dataset directo
 parser.add_argument('--net', default='b0', help='Choose net to use')
 parser.add_argument('--bs', default=24, type=int,  help='batch size')
 parser.add_argument('--ckpt', default=None, type=str, help='resume train')
+parser.add_argument('--epochs', default=40, type=int,  help='epoch size')
 args = parser.parse_args()
 
 config = Config()
@@ -32,6 +33,7 @@ config = Config()
 config.batch_size = args.bs
 config.net = args.net
 config.ckpt = args.ckpt
+config.epochs = args.epochs
 config.refresh()
 
 # GPU settings

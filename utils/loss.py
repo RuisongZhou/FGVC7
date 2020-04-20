@@ -84,3 +84,5 @@ class Criterion(nn.Module):
 
         return loss1 * self.weight_arcface + loss2 * self.weight_ce
 
+    def ce_forward(self, logits, labels):
+        return F.cross_entropy(logits,labels, weight=self.weight.to(logits))

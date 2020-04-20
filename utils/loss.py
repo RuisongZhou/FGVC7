@@ -47,7 +47,7 @@ class LabelSmoothSoftmaxCEV1(nn.Module):
 
 class ArcFaceLoss(nn.Module):
     def __init__(self, s=30.0, m=0.5, reduction='mean'):
-        super().__init__()
+        super(ArcFaceLoss, self).__init__()
         self.reduction = reduction
         self.s = s
         self.cos_m = math.cos(m)             #  0.87758
@@ -66,3 +66,21 @@ class ArcFaceLoss(nn.Module):
         output *= self.s
         loss = F.cross_entropy(output, labels, reduction = self.reduction)
         return loss / 2
+
+
+class Criterion(nn.Module):
+    def __init__(self, weight_arcface=1, weight_ce=1):
+        super(Criterion, self).__init__()
+
+        self.arcfaceloss = ArcFaceLoss()
+        ceweight = [1, 4, 1, 1]
+        self.weight = torch.tensor(ceweight)
+        self.weight_arcface = weight_arcface
+        self.weight_ce = weight_ce
+
+    def forward(self, logits, labels):
+        loss1 = self.arcfaceloss(logits, labels)
+        loss2 = F.cross_entropy(logits,labels, weight=self.weight.to(logits))
+
+        return loss1 * self.weight_arcface + loss2 * self.weight_ce
+

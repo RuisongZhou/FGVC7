@@ -47,7 +47,7 @@ torch.backends.cudnn.benchmark = True
 ce_weight = 1.0
 arc_weight = 0
 if args.loss == 'all':
-    ce_weight = arc_weight = 1.0
+    ce_weight = arc_weight = 0.5
 elif args.loss == 'ce':
     ce_weight = 1.0
     arc_weight = 0
@@ -214,9 +214,9 @@ def train(**kwargs):
         # obtain data for training
         X = X.to(device)
         y = y.to(device)
-        y_pred_raw = net(X)
+        out = net(X)
         # loss
-        batch_loss = criterion(y_pred_raw, y)
+        batch_loss = criterion(out, y)
 
         # backward
         batch_loss.backward()
@@ -224,6 +224,7 @@ def train(**kwargs):
 
         # metrics: loss and top-1,5 error
         with torch.no_grad():
+            y_pred_raw, _ = out
             epoch_loss = loss_container(batch_loss.item())
             epoch_raw_acc = raw_metric(y_pred_raw, y)
 
@@ -265,7 +266,7 @@ def validate(**kwargs):
             ##################################
             # Raw Image
             ##################################
-            y_pred = net(X)
+            y_pred , _= net(X)
             # loss
             batch_loss = criterion.ce_forward(y_pred, y)
             epoch_loss = loss_container(batch_loss.item())

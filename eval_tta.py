@@ -97,7 +97,7 @@ def main():
             for i, input in enumerate(test_loader):
                 X, _ = input
                 X = X.to(device)
-                y_pred = net(X)
+                y_pred, _ = net(X)
 
                 # 处理结果
                 y_pred = F.softmax(y_pred, dim=1).cpu().numpy()

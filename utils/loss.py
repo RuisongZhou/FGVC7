@@ -4,9 +4,9 @@
 # @Author  : RuisongZhou
 # @Mail    : rhyszhou99@gmail.com
 import torch
-import torch.nn as nn
 import math
 import torch.nn.functional as F
+from torch import nn, Tensor
 
 class LabelSmoothSoftmaxCEV1(nn.Module):
     '''
@@ -72,13 +72,45 @@ class ArcFaceLoss(nn.Module):
         phi = cosine * self.cos_m - sine * self.sin_m
         phi = torch.where(cosine > self.th, phi, cosine - self.mm)
         bs = logits.size(0)
-        y_onehot = torch.zeros([bs, 4]).to(labels).scatter_(1, labels.view(-1,1), 1)
-
+        y_onehot = torch.zeros([bs, 4]).to(logits).scatter_(1, labels.view(-1,1), 1)
         output = (y_onehot * phi) + ((1.0 - y_onehot) * cosine)
         output *= self.s
         loss = self.cross_entropy(output, y_onehot, reduction = self.reduction)
         return loss / 2
 
+class CircleLoss(nn.Module):
+    def __init__(self, m=0.25, gamma=80) -> None:
+        super(CircleLoss, self).__init__()
+        self.m = m
+        self.gamma = gamma
+        self.soft_plus = nn.Softplus()
+
+    def convert_label_to_similarity(self, normed_feature: Tensor, label: Tensor):
+        similarity_matrix = normed_feature @ normed_feature.transpose(1, 0)
+        label_matrix = label.unsqueeze(1) == label.unsqueeze(0)
+
+        positive_matrix = label_matrix.triu(diagonal=1)
+        negative_matrix = label_matrix.logical_not().triu(diagonal=1)
+
+        similarity_matrix = similarity_matrix.view(-1)
+        positive_matrix = positive_matrix.view(-1)
+        negative_matrix = negative_matrix.view(-1)
+        return similarity_matrix[positive_matrix], similarity_matrix[negative_matrix]
+
+    def forward(self, sp: Tensor, sn: Tensor) -> Tensor:
+        sp, sn = self.convert_label_to_similarity(sp, sn)
+        ap = torch.clamp_min(- sp.detach() + 1 + self.m, min=0.)
+        an = torch.clamp_min(sn.detach() + self.m, min=0.)
+
+        delta_p = 1 - self.m
+        delta_n = self.m
+
+        logit_p = - ap * (sp - delta_p) * self.gamma
+        logit_n = an * (sn - delta_n) * self.gamma
+
+        loss = self.soft_plus(torch.logsumexp(logit_n, dim=0) + torch.logsumexp(logit_p, dim=0))
+
+        return loss
 
 class Criterion(nn.Module):
     def __init__(self, weight_arcface=1.0, weight_ce=1.0):
@@ -90,8 +122,9 @@ class Criterion(nn.Module):
         self.weight_arcface = weight_arcface
         self.weight_ce = weight_ce
 
-    def forward(self, logits, labels):
-        loss1 = self.arcfaceloss(logits, labels)
+    def forward(self, out, labels):
+        logits, arc_metric = out
+        loss1 = self.arcfaceloss(arc_metric, labels)
         loss2 = F.cross_entropy(logits,labels, weight=self.weight.to(logits))
 
         return loss1 * self.weight_arcface + loss2 * self.weight_ce

@@ -254,6 +254,21 @@ class EfficientNet(nn.Module):
         if model_name not in valid_models:
             raise ValueError('model_name should be one of: ' + ', '.join(valid_models))
 
+import math
+class ArcMarginProduct(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.weight = nn.Parameter(torch.FloatTensor(out_features, in_features))
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.weight.size(1))
+        self.weight.data.uniform_(-stdv, stdv)
+
+    def forward(self, features):
+        features = features.contiguous().view(features.size(0), -1)
+        cosine = F.linear(F.normalize(features), F.normalize(self.weight))
+        return cosine
 
 class efficientnet(nn.Module):
     def __init__(self, size, num_classes=4):
@@ -264,18 +279,20 @@ class efficientnet(nn.Module):
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.last_linear = nn.Linear(self.feature_size, num_classes)
+        self.arc = ArcMarginProduct(self.feature_size, num_classes)
 
     def logits(self, x):
         x = self.avg_pool(x)
+        arc = self.arc(x)
         x = self.dropout(x)
         x = x.contiguous().view(x.size(0), -1)
         x = self.last_linear(x)
-        return x
+        return x, arc
 
     def forward(self, x):
         x = self.model.extract_features(x)
-        x = self.logits(x)
-        return x
+        x, arc = self.logits(x)
+        return x, arc
 
     def get_features(self):
         return self.model.extract_features

@@ -26,6 +26,7 @@ parser.add_argument('--net', default='b0', help='Choose net to use')
 parser.add_argument('--bs', default=24, type=int,  help='batch size')
 parser.add_argument('--ckpt', default=None, type=str, help='resume train')
 parser.add_argument('--epochs', default=40, type=int,  help='epoch size')
+parser.add_argument('--loss', default='all', type=str, help='choose loss')
 args = parser.parse_args()
 
 config = Config()
@@ -43,8 +44,17 @@ device = torch.device("cuda:0")
 torch.backends.cudnn.benchmark = True
 
 # General loss functions
-cross_entropy_loss = nn.CrossEntropyLoss(weight=torch.tensor([1.0,4.0,1.0,1.0]).to(device))
-#cross_entropy_loss = LabelSmoothSoftmaxCEV1()
+ce_weight = 1
+arc_weight = 0
+if args.loss == 'all':
+    ce_weight = arc_weight = 1
+elif args.loss == 'ce':
+    ce_weight = 1
+    arc_weight = 0
+elif args.loss == 'arc' :
+    ce_weight = 0
+    arc_weight = 1
+criterion = Criterion(weight_arcface=arc_weight, weight_ce=ce_weight)
 # loss and metric
 loss_container = AverageMeter(name='loss')
 raw_metric = TopKAccuracyMetric(topk=(1,2))
@@ -206,7 +216,7 @@ def train(**kwargs):
         y = y.to(device)
         y_pred_raw = net(X)
         # loss
-        batch_loss = cross_entropy_loss(y_pred_raw, y)
+        batch_loss = criterion(y_pred_raw, y)
 
         # backward
         batch_loss.backward()
@@ -257,7 +267,7 @@ def validate(**kwargs):
             ##################################
             y_pred = net(X)
             # loss
-            batch_loss = cross_entropy_loss(y_pred, y)
+            batch_loss = criterion.ce_forward(y_pred, y)
             epoch_loss = loss_container(batch_loss.item())
 
             # metrics: top-1,5 error

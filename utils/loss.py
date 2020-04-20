@@ -71,8 +71,9 @@ class ArcFaceLoss(nn.Module):
         sine = torch.sqrt(1.0 - torch.pow(cosine, 2))  # equals to **2
         phi = cosine * self.cos_m - sine * self.sin_m
         phi = torch.where(cosine > self.th, phi, cosine - self.mm)
-        y_onehot = torch.tensor([labels.size(0), 4],dtype=torch.float32).zero_().to(labels)
-        y_onehot.scatter_(1, labels.view(-1,1), 1)
+        bs = logits.size(0)
+        y_onehot = torch.zeros([bs, 4]).scatter_(1, labels.view(-1,1), 1).to(labels)
+
         output = (y_onehot * phi) + ((1.0 - y_onehot) * cosine)
         output *= self.s
         loss = self.cross_entropy(output, y_onehot, reduction = self.reduction)

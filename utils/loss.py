@@ -72,7 +72,7 @@ class ArcFaceLoss(nn.Module):
         phi = cosine * self.cos_m - sine * self.sin_m
         phi = torch.where(cosine > self.th, phi, cosine - self.mm)
         bs = logits.size(0)
-        y_onehot = torch.zeros([bs, 4]).scatter_(1, labels.view(-1,1), 1).to(labels)
+        y_onehot = torch.zeros([bs, 4]).to(labels).scatter_(1, labels.view(-1,1), 1)
 
         output = (y_onehot * phi) + ((1.0 - y_onehot) * cosine)
         output *= self.s

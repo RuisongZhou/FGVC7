@@ -55,7 +55,7 @@ class ArcFaceLoss(nn.Module):
         self.th = math.cos(math.pi - m)      # -0.87758
         self.mm = math.sin(math.pi - m) * m  #  0.23971
 
-    def cross_entropy(preds, trues, class_weights=1.0, reduction='mean', **kwargs):
+    def cross_entropy(self, preds, trues, class_weights=1.0, reduction='mean', **kwargs):
         class_weights = torch.tensor(class_weights).to(preds)
         ce_loss = -torch.sum(class_weights * trues * F.log_softmax(preds, dim=1), dim=1)
         if reduction == 'mean':

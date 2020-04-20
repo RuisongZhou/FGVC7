@@ -66,8 +66,8 @@ class Resize(object):
         self.size = size
 
     def __call__(self, image, labels=None):
-        image = cv2.resize(image, (self.size[0],
-                                   self.size[1]))
+        image = cv2.resize(image, (self.size[1],
+                                   self.size[0]))
         return image, labels
 
 
@@ -235,9 +235,9 @@ class RandomCrop(object):
     def __init__(self,size):
         self.size = size
     def __call__(self, image, labels=None):
-        height, width, _ = image.shape
-        x = random.randrange(width-self.size[0])
-        y = random.randrange(height-self.size[1])
+        height, width, _ = image.shape      #400*640  -> 320*512
+        x = random.randrange(height-self.size[0])
+        y = random.randrange(width-self.size[1])
         return image[x:x+self.size[0], y:y+self.size[1]], labels
 
 class RandomRotate(object):

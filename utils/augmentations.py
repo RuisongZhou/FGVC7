@@ -236,9 +236,9 @@ class RandomCrop(object):
         self.size = size
     def __call__(self, image, labels=None):
         height, width, _ = image.shape
-        x = random.randrange(width-self.size)
-        y = random.randrange(height-self.size)
-        return image[x:x+self.size, y:y+self.size], labels
+        x = random.randrange(width-self.size[0])
+        y = random.randrange(height-self.size[1])
+        return image[x:x+self.size[0], y:y+self.size[1]], labels
 
 class RandomRotate(object):
     def __init__(self, angle):

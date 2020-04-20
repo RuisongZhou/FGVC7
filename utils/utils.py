@@ -191,7 +191,7 @@ def get_transform(resize, phase='train'):
     if phase == 'train':
         return Compose([
             Resize(size=(int(resize[0] / 0.8), int(resize[1] / 0.8))),
-            RandomCrop(resize[0]),
+            RandomCrop(resize),
             HorizontalFilp(),
             VerticalFlip(),
             RandomRotate(90),
@@ -210,20 +210,20 @@ def get_transform(resize, phase='train'):
     elif phase == 'tta':
         aug0 = Compose([
             Resize(size=(int(resize[0]/0.8), int(resize[1]/0.8))),
-            RandomCrop(resize[0]),
+            RandomCrop(resize),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ToTensor(),
         ])
         aug1 =  Compose([
             Resize(size=(int(resize[0]/0.8), int(resize[1]/0.8))),
-            RandomCrop(resize[0]),
+            RandomCrop(resize),
             HorizontalFilp(),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ToTensor(),
         ])
         aug2 = Compose([
             Resize(size=(int(resize[0] / 0.8), int(resize[1] / 0.8))),
-            RandomCrop(resize[0]),
+            RandomCrop(resize),
             VerticalFlip(),
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ToTensor(),

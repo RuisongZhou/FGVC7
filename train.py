@@ -87,10 +87,10 @@ def main():
     split = int(0.1 * len(train_dataset))
     train_indices = indices[split:]
     test_indices = indices[:split]
-    train_sampler = SubsetRandomSampler(train_indices)
+    #train_sampler = SubsetRandomSampler(train_indices)
     valid_sampler = SubsetRandomSampler(test_indices)
 
-    train_loader  = DataLoader(train_dataset, batch_size=config.batch_size, sampler=train_sampler,
+    train_loader  = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True,
                                                num_workers=config.workers, pin_memory=True)
     validate_loader = DataLoader(train_dataset, batch_size=config.batch_size, sampler=valid_sampler,
                               num_workers=config.workers, pin_memory=True)
@@ -130,10 +130,10 @@ def main():
     # Optimizer, LR Schedulerextract_features(img)
     ##################################
     learning_rate = logs['lr'] if 'lr' in logs else config.learning_rate
-    optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-5)
-
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.9, patience=2)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[20], gamma=0.1)
+    #optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-5)
+    optimizer = torch.optim.AdamW(net.parameters(),lr=learning_rate, amsgrad=True)
+    #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.9, patience=2)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, config.epochs, eta_min = 1e-6)
 
     ##################################
     # ModelCheckpoint

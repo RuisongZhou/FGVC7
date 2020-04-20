@@ -43,8 +43,8 @@ device = torch.device("cuda:0")
 torch.backends.cudnn.benchmark = True
 
 # General loss functions
-cross_entropy_loss = LabelSmoothSoftmaxCEV1()
-
+cross_entropy_loss = nn.CrossEntropyLoss(weight=torch.tensor([1.0,4.0,1.0,1.0]).to(device))
+#cross_entropy_loss = LabelSmoothSoftmaxCEV1()
 # loss and metric
 loss_container = AverageMeter(name='loss')
 raw_metric = TopKAccuracyMetric(topk=(1,2))

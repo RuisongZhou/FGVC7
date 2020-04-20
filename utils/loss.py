@@ -33,9 +33,8 @@ class LabelSmoothSoftmaxCEV1(nn.Module):
             lb_pos, lb_neg = 1. - self.lb_smooth, self.lb_smooth / num_classes
             label = torch.empty_like(logits).fill_(
                 lb_neg).scatter_(1, label.unsqueeze(1), lb_pos).detach()
-
         logs = self.log_softmax(logits)
-        loss = -torch.sum(logs * label, dim=1)
+        loss = -torch.sum(logs * label , dim=1)
         loss[ignore] = 0
         if self.reduction == 'mean':
             loss = loss.sum() / n_valid
@@ -43,3 +42,4 @@ class LabelSmoothSoftmaxCEV1(nn.Module):
             loss = loss.sum()
 
         return loss
+

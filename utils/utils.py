@@ -112,8 +112,8 @@ class ModelCheckpoint(Callback):
         if isinstance(current_score, np.ndarray):
             current_score = current_score[0]
 
-        if (self.mode == 'max' and current_score > self.best_score) or \
-            (self.mode == 'min' and current_score < self.best_score):
+        if (self.mode == 'max' and current_score >= self.best_score) or \
+            (self.mode == 'min' and current_score <= self.best_score):
             self.best_score = current_score
 
             if isinstance(net, torch.nn.DataParallel):

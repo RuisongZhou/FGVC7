@@ -55,21 +55,32 @@ class ArcFaceLoss(nn.Module):
         self.th = math.cos(math.pi - m)      # -0.87758
         self.mm = math.sin(math.pi - m) * m  #  0.23971
 
+    def cross_entropy(preds, trues, class_weights=1.0, reduction='mean', **kwargs):
+        class_weights = torch.tensor(class_weights).to(preds)
+        ce_loss = -torch.sum(class_weights * trues * F.log_softmax(preds, dim=1), dim=1)
+        if reduction == 'mean':
+            return ce_loss.mean()
+        elif reduction == 'sum':
+            return ce_loss.sum()
+        elif reduction == 'none':
+            return ce_loss
+
     def forward(self, logits, labels):
         logits = logits.float()  # float16 to float32 (if used float16)
         cosine = logits
         sine = torch.sqrt(1.0 - torch.pow(cosine, 2))  # equals to **2
         phi = cosine * self.cos_m - sine * self.sin_m
         phi = torch.where(cosine > self.th, phi, cosine - self.mm)
-
-        output = (labels * phi) + ((1.0 - labels) * cosine)
+        y_onehot = torch.tensor([labels.size(0), 4],dtype=torch.float32).zero_()
+        y_onehot.scatter_(1, labels, 1)
+        output = (y_onehot * phi) + ((1.0 - y_onehot) * cosine)
         output *= self.s
-        loss = F.cross_entropy(output, labels, reduction = self.reduction)
+        loss = self.cross_entropy(output, y_onehot, reduction = self.reduction)
         return loss / 2
 
 
 class Criterion(nn.Module):
-    def __init__(self, weight_arcface=1, weight_ce=1):
+    def __init__(self, weight_arcface=1.0, weight_ce=1.0):
         super(Criterion, self).__init__()
 
         self.arcfaceloss = ArcFaceLoss()

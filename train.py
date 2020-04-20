@@ -44,16 +44,16 @@ device = torch.device("cuda:0")
 torch.backends.cudnn.benchmark = True
 
 # General loss functions
-ce_weight = 1
+ce_weight = 1.0
 arc_weight = 0
 if args.loss == 'all':
-    ce_weight = arc_weight = 1
+    ce_weight = arc_weight = 1.0
 elif args.loss == 'ce':
-    ce_weight = 1
+    ce_weight = 1.0
     arc_weight = 0
 elif args.loss == 'arc' :
     ce_weight = 0
-    arc_weight = 1
+    arc_weight = 1.0
 criterion = Criterion(weight_arcface=arc_weight, weight_ce=ce_weight)
 # loss and metric
 loss_container = AverageMeter(name='loss')

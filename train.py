@@ -58,7 +58,6 @@ criterion = Criterion(weight_arcface=arc_weight, weight_ce=ce_weight)
 # loss and metric
 loss_container = AverageMeter(name='loss')
 raw_metric = TopKAccuracyMetric(topk=(1,2))
-arc_metric = TopKAccuracyMetric(topk=(1,2))
 
 def choose_net(name: str):
     if len(name) == 2 and name[0] == 'b':
@@ -215,9 +214,9 @@ def train(**kwargs):
         # obtain data for training
         X = X.to(device)
         y = y.to(device)
-        out = net(X)
+        y_pred_raw, _ = net(X)
         # loss
-        batch_loss = criterion(out, y)
+        batch_loss = criterion(y_pred_raw, y)
 
         # backward
         batch_loss.backward()
@@ -225,7 +224,6 @@ def train(**kwargs):
 
         # metrics: loss and top-1,5 error
         with torch.no_grad():
-            y_pred_raw, _ = out
             epoch_loss = loss_container(batch_loss.item())
             epoch_raw_acc = raw_metric(y_pred_raw, y)
 
@@ -274,13 +272,12 @@ def validate(**kwargs):
 
             # metrics: top-1,5 error
             epoch_acc = raw_metric(y_pred, y)
-            arc_acc = arc_metric(y_arc, y)
     # end of validation
     logs['val_{}'.format(loss_container.name)] = epoch_loss
     logs['val_{}'.format(raw_metric.name)] = epoch_acc
     end_time = time.time()
 
-    batch_info = 'Val Loss {:.4f}, Val Acc ({:.2f}, {:.2f})'.format(epoch_loss, epoch_acc[0], arc_acc[0])
+    batch_info = 'Val Loss {:.4f}, Val Acc ({:.2f}, {:.2f})'.format(epoch_loss, epoch_acc[0], epoch_acc[1])
     pbar.set_postfix_str('{}, {}'.format(logs['train_info'], batch_info))
 
     # write log for this epoch

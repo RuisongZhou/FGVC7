@@ -128,7 +128,7 @@ class Criterion(nn.Module):
         else :
             logits, arc_metric = out
             build_img = None
-        loss1 = self.arcfaceloss(arc_metric, labels)
+        loss1 = self.arcfaceloss(arc_metric, labels) if self.weight_ce else 0
         loss2 = F.cross_entropy(logits,labels, weight=self.weight.to(logits))
         loss = loss1 * self.weight_arcface + loss2 * self.weight_ce
         if image is not None and build_img is not None:

@@ -66,6 +66,10 @@ def choose_net(name: str):
         model = se_resnext50()
     elif name.lower() == 'seresnext101':
         model = se_resnext101()
+    elif name.lower() == 'resnest101':
+        model = Resnest101()
+    elif name.lower() == 'resnest269':
+        model = Resnest269()
     else:
         logging.fatal("The net type is wrong.")
         parser.print_help(sys.stderr)

@@ -194,8 +194,8 @@ def get_transform(resize, phase='train'):
             RandomCrop(resize),
             HorizontalFilp(),
             VerticalFlip(),
-            RandomRotate(90),
-            dropout(rate=(0,0.3)),       #Cutout
+            RandomRotate(30),
+            dropout(rate=(0,0.2)),       #Cutout
             Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ToTensor(),
 

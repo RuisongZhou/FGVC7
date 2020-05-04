@@ -105,7 +105,7 @@ class Rebuild(nn.Module):
             conv_bn(in_channels, in_channels,3,1),
             UpSample(in_channels, keep_channel=False),    # x16build_img
             conv_bn(in_channels//4, in_channels//4,3,1),
-            nn.Conv2d(in_channels//4,out_channels=3,kernel_size=1,padding=0, bias=False)
+            nn.Conv2d(in_channels//4,out_channels=3,kernel_size=1,padding=0, bias=True)
         )
         self.init()
     def init(self):

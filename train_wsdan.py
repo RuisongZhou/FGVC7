@@ -23,12 +23,14 @@ parser.add_argument('--datasets', default='./data/', help='Train Dataset directo
 parser.add_argument('--net', default='inception_mixed_6e', help='Choose net to use')
 parser.add_argument('--bs', default=24, type=int,  help='batch size')
 parser.add_argument('--ckpt', default=None, type=str, help='resume train')
+parser.add_argument('--epochs', default=40, type=int,  help='epoch size')
 args = parser.parse_args()
 config = Config()
 #others
 config.batch_size = args.bs
 config.net = args.net
 config.ckpt = args.ckpt
+config.epochs = args.epochs
 config.refresh()
 
 # GPU settings
@@ -125,11 +127,10 @@ def main():
     # Optimizer, LR Schedulerextract_features(img)
     ##################################
     learning_rate = logs['lr'] if 'lr' in logs else config.learning_rate
-    optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-5)
-
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.9, patience=2)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.9)
-
+    #optimizer = torch.optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-5)
+    #scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.9)
+    optimizer = torch.optim.AdamW(net.parameters(), lr=learning_rate, amsgrad=True)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, config.epochs, eta_min=1e-6)
     ##################################
     # ModelCheckpoint
     ##################################

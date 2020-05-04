@@ -73,8 +73,8 @@ class Resize(object):
 
 class Normalize(object):
     def __init__(self, mean, std):
-        self.mean = np.array(mean, dtype=np.float32)
-        self.std = np.array(std, dtype=np.float32)
+        self.mean = np.array(mean, dtype=np.float32)*255
+        self.std = np.array(std, dtype=np.float32)*255
 
     def __call__(self, image, labels=None):
         image = image.astype(np.float32)

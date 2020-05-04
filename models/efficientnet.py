@@ -290,12 +290,17 @@ class efficientnet(nn.Module):
         return x, arc
 
     def forward(self, x):
-        x = self.model.extract_features(x)
+        with torch.no_grad():
+            x = self.model.extract_features(x)
         x, arc = self.logits(x)
         return x, arc
 
     def get_features(self):
         return self.model.extract_features
+
+    def re_init(self):
+        self.last_linear.weight.data.normal_(0, 0.01)
+        self.last_linear.bias.data.zero_()
 
 if __name__ == '__main__':
     model = EfficientNet.from_name('efficientnet-b7').extract_features

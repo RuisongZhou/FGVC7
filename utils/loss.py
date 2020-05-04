@@ -117,17 +117,23 @@ class Criterion(nn.Module):
         super(Criterion, self).__init__()
 
         self.arcfaceloss = ArcFaceLoss()
-        ceweight = [1, 4, 1, 1]
+        ceweight = [1, 6, 1, 1]
         self.weight = torch.tensor(ceweight)
         self.weight_arcface = weight_arcface
         self.weight_ce = weight_ce
 
-    def forward(self, out, labels):
-        logits, arc_metric = out
+    def forward(self, out, labels, image=None):
+        if len(out) ==3 :
+            logits, arc_metric, build_img = out
+        else :
+            logits, arc_metric = out
+            build_img = None
         loss1 = self.arcfaceloss(arc_metric, labels)
         loss2 = F.cross_entropy(logits,labels, weight=self.weight.to(logits))
-
-        return loss1 * self.weight_arcface + loss2 * self.weight_ce
+        loss = loss1 * self.weight_arcface + loss2 * self.weight_ce
+        if image is not None and build_img is not None:
+             loss += F.mse_loss(build_img.flatten(), image.flatten())
+        return loss
 
     def ce_forward(self, logits, labels):
         return F.cross_entropy(logits,labels, weight=self.weight.to(logits))

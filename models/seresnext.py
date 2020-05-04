@@ -12,6 +12,7 @@ import torch.nn as nn
 from torch.utils import model_zoo
 import torch
 import torch.nn.functional as F
+from models.fpn import *
 
 __all__ = ['SENet', 'senet154', 'se_resnet50', 'se_resnet101', 'se_resnet152',
            'se_resnext50_32x4d', 'se_resnext101_32x4d']
@@ -349,12 +350,12 @@ class SENet(nn.Module):
         return nn.Sequential(*layers)
 
     def features(self, x):
-        x = self.layer0(x)
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-        return x
+        x = self.layer0(x)     #112
+        x1 = self.layer1(x)     #56
+        x2 = self.layer2(x1)     #28
+        x3 = self.layer3(x2)     #14
+        x4 = self.layer4(x3)     #7
+        return x1, x2, x3, x4
 
     def logits(self, x):
         x = self.avg_pool(x)
@@ -461,10 +462,12 @@ class ArcMarginProduct(nn.Module):
         return cosine
 
 class se_resnext50(nn.Module):
-    def __init__(self, num_classes=4):
+    def __init__(self, num_classes=4, rebuild=True):
         super(se_resnext50, self).__init__()
         self.model = se_resnext50_32x4d()
 
+        self.fpn = FPN(in_channels_list=[64*4, 128*4, 256*4, 512*4], out_channels=64)
+        self.build = Rebuild(in_channels=64,block=SEResNeXtBottleneck(64, 16, 16, 4))
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.last_linear = nn.Linear(512 * 4, num_classes)
@@ -479,8 +482,12 @@ class se_resnext50(nn.Module):
         return x, arc
 
     def forward(self, x):
-        x = self.model.features(x)
-        x, arc = self.logits(x)
+        x1, x2, x3, x4 = self.model.features(x)
+        x, arc = self.logits(x4)
+        if self.training:
+            build_img = self.fpn([x1, x2, x3, x4])
+            build_img = self.build(build_img)
+            return x, arc, build_img
         return x, arc
 
 class se_resnext101(nn.Module):
@@ -502,6 +509,11 @@ class se_resnext101(nn.Module):
         return x, arc
 
     def forward(self, x):
-        x = self.model.features(x)
-        x, arc = self.logits(x)
+        x1, x2, x3, x4 = self.model.features(x)
+        x, arc = self.logits(x4)
         return x, arc
+
+if __name__ == '__main__':
+    net = se_resnext50()
+    input = torch.randn(1,3,320,512)
+    net(input)

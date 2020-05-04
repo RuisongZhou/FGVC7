@@ -121,12 +121,12 @@ def main():
 
         # Get epoch and some logs
         logs = checkpoint['logs']
-        start_epoch = int(logs['epoch'])
+        start_epoch = 0#int(logs['epoch'])
         # Load weights
         state_dict = checkpoint['state_dict']
         net.load_state_dict(state_dict)
         logging.info('Network loaded from {}'.format(config.ckpt))
-
+        net.re_init()
     logging.info('Network weights save to {}'.format(config.save_dir))
 
     ##################################x
@@ -216,7 +216,7 @@ def train(**kwargs):
         y = y.to(device)
         out = net(X)
         # loss
-        batch_loss = criterion(out, y)
+        batch_loss = criterion(out, y, X)
 
         # backward
         batch_loss.backward()
@@ -224,7 +224,7 @@ def train(**kwargs):
 
         # metrics: loss and top-1,5 error
         with torch.no_grad():
-            y_pred_raw, _ = out
+            y_pred_raw = out[0]
             epoch_loss = loss_container(batch_loss.item())
             epoch_raw_acc = raw_metric(y_pred_raw, y)
 

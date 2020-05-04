@@ -97,14 +97,31 @@ class distLinear(nn.Module):
 
         return scores
 
+import math
+import torch.nn.functional as F
+class ArcMarginProduct(nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.weight = nn.Parameter(torch.FloatTensor(out_features, in_features))
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        stdv = 1. / math.sqrt(self.weight.size(1))
+        self.weight.data.uniform_(-stdv, stdv)
+
+    def forward(self, features):
+        features = features.contiguous().view(features.size(0), -1)
+        cosine = F.linear(F.normalize(features), F.normalize(self.weight))
+        return cosine
+
 class Resnest50(nn.Module):
     def __init__(self, num_classes=4):
         super(Resnest50, self).__init__()
         self.model = resnest50(pretrained=True)
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.last_linear = nn.Linear(512 * 4, num_classes)
-
+        self.last_linear = nn.Linear(512* 4, num_classes)
+        self.arc = ArcMarginProduct(2048, num_classes)
     def logits(self, x):
         x = self.avg_pool(x)
         arc = self.arc(x)
@@ -115,9 +132,9 @@ class Resnest50(nn.Module):
 
     def forward(self, x):
         x = self.model.extract_feature(x)
-        x = self.logits(x)
+        x, arc = self.logits(x)
 
-        return x, None
+        return x, arc
 
 class Resnest101(nn.Module):
     def __init__(self, num_classes=4):
@@ -126,7 +143,7 @@ class Resnest101(nn.Module):
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.last_linear = nn.Linear(512 * 4, num_classes)
-
+        self.arc = ArcMarginProduct(2048, num_classes)
     def logits(self, x):
         x = self.avg_pool(x)
         arc = self.arc(x)
@@ -137,9 +154,9 @@ class Resnest101(nn.Module):
 
     def forward(self, x):
         x = self.model.extract_feature(x)
-        x = self.logits(x)
+        x, arc = self.logits(x)
 
-        return x, None
+        return x, arc
 
 class Resnest200(nn.Module):
     def __init__(self, num_classes=4):
@@ -148,20 +165,20 @@ class Resnest200(nn.Module):
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.last_linear = nn.Linear(512 * 4, num_classes)
-
+        self.arc = ArcMarginProduct(2048, num_classes)
     def logits(self, x):
         x = self.avg_pool(x)
         arc = self.arc(x)
         x = self.dropout(x)
         x = x.view(x.size(0), -1)
-        x = self.last_linear(x)
+        x,arc = self.last_linear(x)
         return x, arc
 
     def forward(self, x):
         x = self.model.extract_feature(x)
-        x = self.logits(x)
+        x,arc = self.logits(x)
 
-        return x, None
+        return x, arc
 
 class Resnest269(nn.Module):
     def __init__(self, num_classes=4):
@@ -170,7 +187,7 @@ class Resnest269(nn.Module):
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.last_linear = nn.Linear(512 * 4, num_classes)
-
+        self.arc = ArcMarginProduct(2048, num_classes)
     def logits(self, x):
         x = self.avg_pool(x)
         arc = self.arc(x)
@@ -181,6 +198,6 @@ class Resnest269(nn.Module):
 
     def forward(self, x):
         x = self.model.extract_feature(x)
-        x = self.logits(x)
+        x,arc = self.logits(x)
 
-        return x, None
+        return x, arc

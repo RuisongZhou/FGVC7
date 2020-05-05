@@ -142,7 +142,7 @@ class Resnest101(nn.Module):
         self.model = resnest101(pretrained=True)
         self.dropout = nn.Dropout(0.2)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.last_linear = distLinear(512 * 4, num_classes)
+        self.last_linear = nn.Linear(512 * 4, num_classes)
         self.arc = ArcMarginProduct(2048, num_classes)
     def logits(self, x):
         x = self.avg_pool(x)
@@ -176,7 +176,7 @@ class Resnest200(nn.Module):
 
     def forward(self, x):
         x = self.model.extract_feature(x)
-        x,arc = self.logits(x)
+        x = self.logits(x)
 
         return x, arc
 

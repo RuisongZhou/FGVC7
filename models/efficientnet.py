@@ -290,8 +290,8 @@ class efficientnet(nn.Module):
         return x, arc
 
     def forward(self, x):
-        with torch.no_grad():
-            x = self.model.extract_features(x)
+
+        x = self.model.extract_features(x)
         x, arc = self.logits(x)
         return x, arc
 

@@ -176,7 +176,7 @@ class Resnest200(nn.Module):
 
     def forward(self, x):
         x = self.model.extract_feature(x)
-        x = self.logits(x)
+        x,arc = self.logits(x)
 
         return x, arc
 

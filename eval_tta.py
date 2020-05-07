@@ -42,6 +42,8 @@ def choose_net(name: str):
         model = se_resnext101()
     elif name.lower() == 'resnest101':
         model = Resnest101()
+    elif name.lower() == 'resnest200':
+        model = Resnest200()
     elif name.lower() == 'resnest269':
         model = Resnest269()
     else:

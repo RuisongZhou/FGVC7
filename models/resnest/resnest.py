@@ -171,7 +171,7 @@ class Resnest200(nn.Module):
         arc = self.arc(x)
         x = self.dropout(x)
         x = x.view(x.size(0), -1)
-        x,arc = self.last_linear(x)
+        x = self.last_linear(x)
         return x, arc
 
     def forward(self, x):

@@ -4,7 +4,7 @@ class Config():
         ##################################################
         # Training Config
         ##################################################
-        self.GPU = '0'                   # GPU
+        self.GPU = '0,6,7'                   # GPU
         self.workers = 4                 # number of Dataloader workers
         self.epochs = 40                # number of epochs
         self.batch_size = 16             # batch size

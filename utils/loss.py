@@ -117,7 +117,7 @@ class Criterion(nn.Module):
         super(Criterion, self).__init__()
 
         self.arcfaceloss = ArcFaceLoss()
-        ceweight = [1, 6, 1, 1]
+        ceweight = [1, 4, 1, 1]
         self.weight = torch.tensor(ceweight)
         self.weight_arcface = weight_arcface
         self.weight_ce = weight_ce

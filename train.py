@@ -40,7 +40,7 @@ config.refresh()
 # GPU settings
 assert torch.cuda.is_available()
 os.environ['CUDA_VISIBLE_DEVICES'] = config.GPU
-device = torch.device("cuda:0")
+device = torch.device("cuda")
 torch.backends.cudnn.benchmark = True
 
 # General loss functions
@@ -68,6 +68,8 @@ def choose_net(name: str):
         model = se_resnext101()
     elif name.lower() == 'resnest101':
         model = Resnest101()
+    elif name.lower() == 'resnest200':
+        model = Resnest200()
     elif name.lower() == 'resnest269':
         model = Resnest269()
     else:
@@ -86,12 +88,8 @@ def main():
     ##################################
     # Logging setting
     ##################################
-    logging.basicConfig(
-        filename=os.path.join(config.save_dir, config.log_name),
-        filemode='w',
-        format='%(asctime)s: %(levelname)s: [%(filename)s:%(lineno)d]: %(message)s',
-        level=logging.INFO)
-    warnings.filterwarnings("ignore")
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     ##################################
     # Load dataset  TODO: 10-fold cross validation
@@ -125,12 +123,12 @@ def main():
 
         # Get epoch and some logs
         logs = checkpoint['logs']
-        start_epoch = 0#int(logs['epoch'])
+        start_epoch = int(logs['epoch'])
         # Load weights
         state_dict = checkpoint['state_dict']
         net.load_state_dict(state_dict)
         logging.info('Network loaded from {}'.format(config.ckpt))
-        net.re_init()
+        #net.re_init()
     logging.info('Network weights save to {}'.format(config.save_dir))
 
     ##################################x
@@ -192,7 +190,7 @@ def main():
         if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
             scheduler.step(logs['val_loss'])
         else:
-            scheduler.step()
+            scheduler.step(epoch)
 
         callback.on_epoch_end(logs, net)
         pbar.close()

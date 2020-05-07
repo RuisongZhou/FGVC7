@@ -13,9 +13,11 @@ sample_submission = pd.read_csv(os.path.join('./data/plant-pathology-2020-fgvc7'
 ans1 = pd.read_csv('b4_97.5_all.csv')
 ans2 = pd.read_csv('b6_97.5_ce.csv')
 ans3 = pd.read_csv('resnest101_97.3_all.csv')
-ans4 = pd.read_csv('b6_97.7.csv')
-
-anss =  [ans1, ans2, ans3, ans4]
+ans4 = pd.read_csv('b6_97.7.csv')       #98.4
+ans5 = pd.read_csv('b7_97.2_all.csv')   #98.5
+ans6 = pd.read_csv('97.7.csv')      #98.6
+ans7 = pd.read_csv('97.0_b5.csv')   #98.6
+anss =  [ans1, ans2, ans3, ans4, ans5, ans6, ans7]
 healthy = np.zeros_like(ans1.healthy)
 multiple_diseases= np.zeros_like(ans1.healthy)
 rust= np.zeros_like(ans1.healthy)

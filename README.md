@@ -1,6 +1,6 @@
 # FGVC7
 This repository is for Kaggle Competetion [Plant Pathology 2020 - FGVC7](https://www.kaggle.com/c/plant-pathology-2020-fgvc7/).
-And our rank is 15/1115.
+And our rank is 9/1115.
 
 ## score
 

@@ -1,6 +1,6 @@
 # FGVC7
 This repository is for Kaggle Competetion [Plant Pathology 2020 - FGVC7](https://www.kaggle.com/c/plant-pathology-2020-fgvc7/).
-And our rank is 9/1115.
+And our rank is 5/1115.
 
 ## score
 
@@ -13,12 +13,12 @@ And our rank is 9/1115.
 |ResNest101| 97.3|
 |ResNest200| 97.3|
 |WSDAN*| 97.0|
-|merge**| 98.4|
+|merge**| 98.6|
 
 *. WSDAN model is from pytorch [implement](https://github.com/GuYuc/WS-DAN.PyTorch) of 
 [See Better Before Looking Closer: Weakly Supervised Data Augmentation Network for Fine-Grained Visual Classification](https://arxiv.org/abs/1901.09891v2)
 
-**. merge model is the merge of EffcientNet b4, EffcientNet b6(2 models), ResNest101. 
+**. merge model is the merge of EffcientNet b4, EffcientNet b6(2 models), EffcientNet b5, EffcientNet b7, ResNest101, 
 #
 
 # RUN

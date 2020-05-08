@@ -72,6 +72,8 @@ def choose_net(name: str):
         model = Resnest200()
     elif name.lower() == 'resnest269':
         model = Resnest269()
+    elif name.lower() == 'densenet121':
+        model = DenseNet121()
     else:
         logging.fatal("The net type is wrong.")
         parser.print_help(sys.stderr)
@@ -96,7 +98,7 @@ def main():
     ##################################
     train_dataset = FGVC7Data(root='./data/', phase='train', transform=get_transform(config.image_size, 'train'))
     indices = range(len(train_dataset))
-    split = int(0.1 * len(train_dataset))
+    split = int(0.3 * len(train_dataset))
     train_indices = indices[split:]
     test_indices = indices[:split]
     #train_sampler = SubsetRandomSampler(train_indices)
@@ -271,6 +273,7 @@ def validate(**kwargs):
             y_pred , y_arc = net(X)
             # loss
             batch_loss = criterion.ce_forward(y_pred, y)
+            #batch_loss = criterion.arc_forward(y_arc, y)
             epoch_loss = loss_container(batch_loss.item())
 
             # metrics: top-1,5 error

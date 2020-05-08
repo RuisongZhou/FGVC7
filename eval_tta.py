@@ -46,6 +46,8 @@ def choose_net(name: str):
         model = Resnest200()
     elif name.lower() == 'resnest269':
         model = Resnest269()
+    elif name.lower() == 'densenet121':
+        model = DenseNet121()
     else:
         logging.fatal("The net type is wrong.")
         parser.print_help(sys.stderr)
